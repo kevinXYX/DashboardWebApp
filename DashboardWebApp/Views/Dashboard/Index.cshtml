@@ -3,9 +3,9 @@
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome to your Dashboard</h1>
+    <h1 class="display-5">Welcome to your Dashboard</h1>
 </div>
- <div id="grid"></div>
+@* <div id="grid"></div>
 @section Scripts {
     <script src="./js/kendo/jquery.min.js"></script>
     <script src="./js/kendo/jszip.min.js"></script>
@@ -24,7 +24,7 @@
                     },
                     transport: {
                         read: {
-                            url: "/books/getbooks",
+                            url: "/api/books/getbooks",
                             dataType: 'json',
                             contentType: 'application/json; charset=utf-8',
                             type: 'POST'
@@ -34,6 +34,7 @@
                         }
                     },
                     error: function(e) {
+                        debugger
                         console.log(e.errors);
                         e.sender.cancelChanges();
                     },
@@ -100,4 +101,4 @@
             });
         });
     </script>
-}
+}*@

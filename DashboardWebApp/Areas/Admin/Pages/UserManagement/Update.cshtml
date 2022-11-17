@@ -1,0 +1,39 @@
+﻿@page
+@model DashboardWebApp.Areas.Admin.Pages.UserManagement.UpdateModel
+@{
+    ViewData["Title"] = "Dashboard - Admin User Management Update User";
+}
+<div class="text-left">
+    <h3 class="display-7">Update User</h3>
+</div>
+<br />
+<form id="updateUserForm" method="post" asp-route-userId="@Model.UserId">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="mb-3">
+        <label for="email" class="form-label">Email address</label>
+        <input asp-for="Input.Email" type="email" class="form-control w-25" id="email" disabled>
+    </div>
+    <div class="mb-3">
+        <label for="name" class="form-label">Name</label>
+        <input asp-for="Input.Name" type="text" class="form-control w-25" id="name">
+        <span asp-validation-for="Input.Name" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label for="name" class="form-label">Organization</label>
+        <select asp-for="Input.SelectedOrganizationId" class="form-control w-25" asp-items="@Model.Organizations"></select>
+    </div>
+    <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" asp-for="Input.HasDashboardPermission" id="hasDashboardPermission">
+        <label class="form-check-label" for="hasDashboardPermission">Dashboard Permission</label>
+    </div>
+    <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" asp-for="Input.HasAPIPermission" id="hasAPIPermission">
+        <label class="form-check-label" for="hasAPIPermission">API Permission</label>
+    </div>
+    <div class="mb-3 form-check">
+        <input class="form-check-input" asp-for="Input.IsAdmin" id="isAdminCheck" />
+        <label class="form-check-label" for="isAdminCheck">Is Admin</label>
+    </div>
+    <button id="update-submit" type="submit" class="btn btn-primary">Submit</button>
+    <a href="/Admin/UserManagement" type="button" class="btn btn-default">Back</a>
+</form>

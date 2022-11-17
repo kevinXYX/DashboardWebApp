@@ -6,12 +6,10 @@ using Microsoft.AspNetCore.Mvc;
 namespace DashboardWebApp.ApiControllers
 {
     [Authorize]
-    [Route("api/[controller]")]
-    [ApiController]
     public class BooksController : ControllerBase
     {
         [HttpPost]
-        [Route("/books/getBooks")]
+        [Route("api/books/getBooks")]
         public DataSourceResult GetBooks([FromBody] DataSourceRequest requestModel)
         {
             var books = new List<Book>();

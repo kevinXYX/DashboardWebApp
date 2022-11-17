@@ -1,0 +1,110 @@
+﻿@page
+@model DashboardWebApp.Areas.Admin.Views.UserManagement.IndexModel
+@{
+    ViewData["Title"] = "Dashboard - Admin User Management";
+}
+<div class="text-left">
+    <h3 class="display-">User Management</h3>
+</div>
+<br />
+<a href="/Admin/UserManagement/Create" type="button" class="btn btn-success">Create New</a>
+<br />
+<br />
+<div id="grid"></div>
+@section Scripts {
+    <script src="~/js/kendo/jszip.min.js"></script>
+    <script src="~/js/kendo/kendo.all.min.js"></script>
+    <script id="action-template" type="text/x-kendo-template">
+        <a href="/Admin/UserManagement/View?userId=#: userId #" type="button" class="btn btn-primary">View</a>
+        <a href="/Admin/UserManagement/Update?userId=#: userId #" type="button" class="btn btn-secondary">Update</a>
+    </script>
+    <script id="user-status-template" type="text/x-kendo-template">
+        #if(userStatus === 0) {#<span>Pending</span>#} else if (userStatus === 1) {#<span>Active</span>#}#
+    </script>
+    <script>
+        $(document).ready(function() {
+            $("#grid").kendoGrid({
+                dataSource: {
+                    schema: {
+                        data: "data",
+                        total: "total",
+                        aggregates: "aggregates",
+                        groups: "groups",
+                        errors: "errors",
+                    },
+                    transport: {
+                        read: {
+                            url: "/api/admin/users",
+                            dataType: 'json',
+                            contentType: 'application/json; charset=utf-8',
+                            type: 'POST'
+                        },
+                        parameterMap: function(data, operation) {
+                            return JSON.stringify(data);
+                        }
+                    },
+                    error: function(e) {
+                        e.sender.cancelChanges();
+                    },
+                    pageSize: 10,
+                    serverPaging: true,
+                    serverFiltering: true,
+                    serverSorting: true,
+                },
+                groupable: false,
+                sortable: true,
+                reorderable: false,
+                resizable: true,
+                filterable: {
+                    operators: {
+                        string: {
+                            eq: "Equal to",
+                            contains: "Contains"
+                        }
+                    },
+                },
+                columnMenu: true,
+                pageable: {
+                    refresh: true,
+                    pageSizes: true,
+                    buttonCount: 5
+                },
+                columns: [{
+                    field: "userName",
+                    title: "Email",
+                    width: 250,
+                }, {
+                    field: "fullname",
+                    title: "Name",
+                    width: 200,
+                }, {
+                    field: "createdDate",
+                    title: "Date Created",
+                    width: 150, 
+                    template: '#= kendo.toString(kendo.parseDate(createdDate), "MM/dd/yyyy")#',
+                }, {
+                    field: "storageUsedKB",
+                    title: "Storage Used",
+                    width: 150
+                }
+                    , {
+                    field: "fileName",
+                    title: "File Name",
+                    width: 200
+                }
+                    , {
+                    field: "userStatus",
+                    title: "Status",
+                    width: 100,
+                    template: kendo.template($("#user-status-template").html())
+                },
+                {
+                    field: "",
+                    title: "Action",
+                    width: 200,
+                    template: kendo.template($("#action-template").html())
+                }]
+            });
+        });
+    </script>
+}

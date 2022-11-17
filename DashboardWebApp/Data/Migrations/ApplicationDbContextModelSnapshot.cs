@@ -93,7 +93,88 @@ namespace DashboardWebApp.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("DashboardWebApp.Data.Organization", b =>
+                {
+                    b.Property<int>("OrganizationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OrganizationId"), 1L, 1);
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("OrganizationName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("OrganizationId");
+
+                    b.ToTable("Organization", (string)null);
+                });
+
             modelBuilder.Entity("DashboardWebApp.Data.User", b =>
+                {
+                    b.Property<int>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"), 1L, 1);
+
+                    b.Property<int>("AspNetUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("BucketName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ExpiredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Fullname")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool?>("IsAdmin")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LogoFileName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OrganizationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Password")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RegionName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("StorageLimitKB")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StorageServiceName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("StorageUsedKB")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("UserStatus")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("DashboardWebApp.Data.UserPolicy", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -101,24 +182,58 @@ namespace DashboardWebApp.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<DateTime>("ExpiredAt")
-                        .HasColumnType("datetime2");
+                    b.Property<int>("PolicyGroupId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("LogoFileName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserName")
+                    b.Property<string>("PolicyName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.HasIndex("PolicyGroupId");
+
+                    b.ToTable("UserPolicies");
+                });
+
+            modelBuilder.Entity("DashboardWebApp.Data.UserPolicyGroup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("PolicyGroupName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserPolicyGroup", (string)null);
+                });
+
+            modelBuilder.Entity("DashboardWebApp.Data.UserPolicyMapping", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int>("PolicyId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PolicyId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserPolicyMappings");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -270,6 +385,51 @@ namespace DashboardWebApp.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("DashboardWebApp.Data.User", b =>
+                {
+                    b.HasOne("DashboardWebApp.Data.Organization", "Organization")
+                        .WithMany("Users")
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_Users_Organization_OrganizationId");
+
+                    b.Navigation("Organization");
+                });
+
+            modelBuilder.Entity("DashboardWebApp.Data.UserPolicy", b =>
+                {
+                    b.HasOne("DashboardWebApp.Data.UserPolicyGroup", "UserPolicyGroup")
+                        .WithMany("UserPolicies")
+                        .HasForeignKey("PolicyGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_UserPolicy_PolicyGroup_PolicyGroupId");
+
+                    b.Navigation("UserPolicyGroup");
+                });
+
+            modelBuilder.Entity("DashboardWebApp.Data.UserPolicyMapping", b =>
+                {
+                    b.HasOne("DashboardWebApp.Data.UserPolicy", "UserPolicy")
+                        .WithMany("UserPolicyMappings")
+                        .HasForeignKey("PolicyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_UserPolicyMapping_PolicyId");
+
+                    b.HasOne("DashboardWebApp.Data.User", "User")
+                        .WithMany("UserPolicyMappings")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_UserPolicyMapping_UserId");
+
+                    b.Navigation("User");
+
+                    b.Navigation("UserPolicy");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -321,10 +481,27 @@ namespace DashboardWebApp.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("DashboardWebApp.Data.Organization", b =>
+                {
+                    b.Navigation("Users");
+                });
+
             modelBuilder.Entity("DashboardWebApp.Data.User", b =>
                 {
                     b.Navigation("ApplicationUser")
                         .IsRequired();
+
+                    b.Navigation("UserPolicyMappings");
+                });
+
+            modelBuilder.Entity("DashboardWebApp.Data.UserPolicy", b =>
+                {
+                    b.Navigation("UserPolicyMappings");
+                });
+
+            modelBuilder.Entity("DashboardWebApp.Data.UserPolicyGroup", b =>
+                {
+                    b.Navigation("UserPolicies");
                 });
 #pragma warning restore 612, 618
         }

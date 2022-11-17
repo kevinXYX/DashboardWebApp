@@ -30,23 +30,24 @@ namespace DashboardWebApp.Areas.Identity.Pages.Account
         /// </summary>
         [TempData]
         public string StatusMessage { get; set; }
-        public async Task<IActionResult> OnGetAsync(string userId, string code)
+        public async Task<IActionResult> OnGetAsync(string userId, string Id ,string confirmationToken)
         {
-            if (userId == null || code == null)
+            if (userId == null || confirmationToken == null)
             {
-                return RedirectToPage("/Index");
+                return LocalRedirect("/Identity/Error");
             }
 
             var user = await _userManager.FindByIdAsync(userId);
+
             if (user == null)
             {
                 return NotFound($"Unable to load user with ID '{userId}'.");
             }
 
-            code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code));
-            var result = await _userManager.ConfirmEmailAsync(user, code);
+            confirmationToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(confirmationToken));
+            var result = await _userManager.ConfirmEmailAsync(user, confirmationToken);
             StatusMessage = result.Succeeded ? "Thank you for confirming your email." : "Error confirming your email.";
-            return Page();
+            return LocalRedirect($"/Identity/Account/Create?id={Id}");
         }
     }
 }

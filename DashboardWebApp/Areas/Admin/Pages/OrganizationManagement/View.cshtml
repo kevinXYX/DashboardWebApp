@@ -1,0 +1,14 @@
+﻿@page
+@model DashboardWebApp.Areas.Admin.Pages.OrganizationManagement.ViewModel
+@{
+    ViewData["Title"] = "Dashboard - Admin Organization Management View Organization";
+}
+<div class="text-left">
+    <h3 class="display-7">Organization Details</h3>
+</div>
+<br />
+<div class="mb-3">
+    <label for="email" class="form-label">Organization Name</label>
+    <input asp-for="Input.OrganizationName" type="email" class="form-control w-25" id="email" disabled>
+</div>
+<a href="/Admin/UserManagement" type="button" class="btn btn-default">Back</a>

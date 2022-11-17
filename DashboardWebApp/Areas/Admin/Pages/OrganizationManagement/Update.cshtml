@@ -1,0 +1,19 @@
+﻿@page
+@model DashboardWebApp.Areas.Admin.Pages.OrganizationManagement.UpdateModel
+@{
+    ViewData["Title"] = "Dashboard - Admin Organization Management Update Organization";
+}
+<div class="text-left">
+    <h3 class="display-7">Update Organization</h3>
+</div>
+<br />
+<form id="updateOrganizationForm" asp-route-organizationId="@Model.OrganizationId" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="mb-3">
+        <label for="name" class="form-label">Name</label>
+        <input asp-for="Input.OrganizationName" type="text" class="form-control w-25" id="organizationName">
+        <span asp-validation-for="Input.OrganizationName" class="text-danger"></span>
+    </div>
+    <button id="create-submit" type="submit" class="btn btn-primary">Submit</button>
+    <a href="/Admin/OrganizationManagement" type="button" class="btn btn-default">Back</a>
+</form>
