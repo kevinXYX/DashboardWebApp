@@ -75,6 +75,8 @@ namespace DashboardWebApp.Areas.Admin.Views.UserManagement
             returnUrl ??= Url.Content("~/");
             ModelState.Remove("ReturnUrl");
 
+            SetOrganizationDropdown();
+
             if (ModelState.IsValid)
             {
                 var context = _dbFactory.GetDatabaseContext();
@@ -84,8 +86,6 @@ namespace DashboardWebApp.Areas.Admin.Views.UserManagement
                 if (isUserExists)
                 {
                     ModelState.AddModelError(string.Empty, "User already exists");
-
-                    SetOrganizationDropdown();
 
                     return Page();
                 }
