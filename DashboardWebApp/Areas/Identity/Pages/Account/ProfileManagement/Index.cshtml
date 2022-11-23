@@ -22,6 +22,16 @@
         <span asp-validation-for="Input.Name" class="text-danger"></span>
     </div>
     <div class="mb-3">
+        <label for="password" class="form-label">Current Password</label>
+        <input asp-for="Input.Password" type="password" class="form-control w-25" id="password">
+        <span asp-validation-for="Input.Password" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label for="newpassword" class="form-label">New Password</label>
+        <input asp-for="Input.NewPassword" type="password" class="form-control w-25" id="newpassword">
+        <span asp-validation-for="Input.NewPassword" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
         <label for="name" class="form-label">Organization</label>
         <input asp-for="Input.OrganizationName" class="form-control w-25" disabled>
     </div>

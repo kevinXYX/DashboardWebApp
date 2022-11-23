@@ -57,5 +57,19 @@ namespace DashboardWebApp.Service
             var userMapping = context.UserPolicyMappings.SingleOrDefault(x => x.UserId == user.UserId && x.PolicyId == dashboardPolicy.Id);
             return userMapping != null;
         }
+
+        public bool IsUserDeactivated()
+        {
+            var userEmail = _user.FindFirst(ClaimTypes.Email)?.Value;
+            var context = _dbFactory.GetDatabaseContext();
+            var user = context.Users.SingleOrDefault(x => x.UserName == userEmail);
+
+            if (user == null)
+            {
+                return false;
+            }
+
+            return user.UserStatus == 3;
+        }
     }
 }

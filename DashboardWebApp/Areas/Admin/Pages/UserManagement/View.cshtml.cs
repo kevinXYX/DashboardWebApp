@@ -24,6 +24,7 @@ namespace DashboardWebApp.Areas.Admin.Pages.UserManagement
             public string Email { get; set; }
             public string Name { get; set; }
             public string OrganizationName { get; set; }
+            public string UserStatus { get; set; }
             public bool IsAdmin { get; set; }
             public bool HasAPIPermission { get; set; }
             public bool HasDashboardPermission { get; set; }
@@ -44,6 +45,21 @@ namespace DashboardWebApp.Areas.Admin.Pages.UserManagement
             Input.Name = user.Fullname;
             Input.IsAdmin = user.IsAdmin.GetValueOrDefault();
             Input.OrganizationName = user.Organization.OrganizationName;
+
+            if (user.UserStatus == 0)
+            {
+                Input.UserStatus = "Pending";
+            }
+
+            if (user.UserStatus == 1)
+            {
+                Input.UserStatus = "Active";
+            }
+
+            if (user.UserStatus == 2)
+            {
+                Input.UserStatus = "Deactivated";
+            }
 
             var apiPolicy = context.UserPolicies.SingleOrDefault(x => x.PolicyName == "APIAppPermission");
             var dashboardPolicy = context.UserPolicies.SingleOrDefault(x => x.PolicyName == "DashboardAppPermission");

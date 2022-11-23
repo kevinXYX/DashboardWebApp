@@ -1,6 +1,7 @@
 using DashboardWebApp.Data;
 using DashboardWebApp.Helpers;
 using DashboardWebApp.Service;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -32,8 +33,11 @@ namespace DashboardWebApp.Areas.Identity.Pages.Account.ProfileManagement
 
         public class UserViewModel
         {
+
             public string Email { get; set; }
             public string Name { get; set; }
+            public string Password { get; set; }
+            public string NewPassword { get; set; }
             public string OrganizationName { get; set; }
         }
 
@@ -63,13 +67,28 @@ namespace DashboardWebApp.Areas.Identity.Pages.Account.ProfileManagement
             ModelState.Remove("ReturnUrl");
             ModelState.Remove("StatusMessage");
             ModelState.Remove("Input.OrganizationName");
+            ModelState.Remove("Input.Password");
+            ModelState.Remove("Input.NewPassword");
+
             var currentUser = _userService.GetCurrentUser();
 
             if (ModelState.IsValid)
             {
                 var context = _dbFactory.GetDatabaseContext();
-
                 var userInDb = context.Users.Include(x => x.ApplicationUser).Include(x => x.Organization).SingleOrDefault(x => x.UserId == currentUser.UserId);
+                var passwordHasher = new PasswordHasher<string>();
+
+                if (!string.IsNullOrEmpty(Input.Password) && !string.IsNullOrEmpty(Input.NewPassword))
+                {
+                    var verifyPassword = passwordHasher.VerifyHashedPassword(userInDb.UserName, userInDb.ApplicationUser.PasswordHash, Input.Password);
+
+                    if (verifyPassword == PasswordVerificationResult.Failed)
+                    {
+                        Input.OrganizationName = userInDb.Organization.OrganizationName;
+                        ModelState.AddModelError("", "Unable to change password, Current password is invalid");
+                        return Page();
+                    }
+                }
 
                 if (userInDb.UserName != Input.Email)
                 {
@@ -77,8 +96,8 @@ namespace DashboardWebApp.Areas.Identity.Pages.Account.ProfileManagement
 
                     if (emailExists)
                     {
+                        Input.OrganizationName = userInDb.Organization.OrganizationName;
                         StatusMessage = "Email already taken";
-
                         return Page();
                     }
 
@@ -132,6 +151,11 @@ namespace DashboardWebApp.Areas.Identity.Pages.Account.ProfileManagement
                         context.SaveChanges();
                         return LocalRedirect("/Identity/Account/Logout");
                     }
+                }
+
+                if (!string.IsNullOrEmpty(Input.Password) && !string.IsNullOrEmpty(Input.NewPassword))
+                {
+                    userInDb.ApplicationUser.PasswordHash = passwordHasher.HashPassword(userInDb.UserName, Input.NewPassword);
                 }
 
                 userInDb.Fullname = Input.Name;

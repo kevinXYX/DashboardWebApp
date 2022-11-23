@@ -28,6 +28,14 @@ namespace DashboardWebApp.Controllers
                 return LocalRedirect("/Identity/Account/Login");
             }
 
+            var isUserDeactivated = userService.IsUserDeactivated();
+
+            if (isUserDeactivated)
+            {
+                await _signInManager.SignOutAsync();
+                return LocalRedirect("/Identity/Account/Login");
+            }
+
             return View();
         }
     }

@@ -19,7 +19,7 @@
         <a href="/Admin/UserManagement/Update?userId=#: userId #" type="button" class="btn btn-secondary">Update</a>
     </script>
     <script id="user-status-template" type="text/x-kendo-template">
-        #if(userStatus === 0) {#<span>Pending</span>#} else if (userStatus === 1) {#<span>Active</span>#}#
+        #if(userStatus === 0) {#<span>Pending</span>#} else if (userStatus === 1) {#<span>Active</span>#} else if (userStatus === 2) {#<span>Deactivated</span>#}  #
     </script>
     <script>
         $(document).ready(function() {

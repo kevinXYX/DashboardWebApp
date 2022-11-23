@@ -25,6 +25,9 @@ namespace DashboardWebApp.Areas.Admin.Pages.UserManagement
         public List<SelectListItem> Organizations { get; set; }
 
         [BindProperty]
+        public List<SelectListItem> UserStatuses { get; set; }
+
+        [BindProperty]
         public int UserId { get; set; }
 
         public class UpdateInputModel
@@ -36,6 +39,7 @@ namespace DashboardWebApp.Areas.Admin.Pages.UserManagement
             [DataType(DataType.Text)]
             public string Name { get; set; }
             public int? SelectedOrganizationId { get; set; }
+            public int? SelectedUserStatus { get; set; }
             public bool IsAdmin { get; set; }
             public bool HasAPIPermission { get; set; }
             public bool HasDashboardPermission { get; set; }
@@ -64,6 +68,7 @@ namespace DashboardWebApp.Areas.Admin.Pages.UserManagement
             Input.SelectedOrganizationId = user.Organization.OrganizationId;
             Input.HasAPIPermission = userPolicyMappings.Any(x => x.UserId == userId && x.PolicyId == apiPolicy.Id);
             Input.HasDashboardPermission = userPolicyMappings.Any(x => x.UserId == userId && x.PolicyId == dashboardPolicy.Id);
+            Input.SelectedUserStatus = user.UserStatus;
 
             var organizations = context.Organizations.ToList();
 
@@ -78,6 +83,12 @@ namespace DashboardWebApp.Areas.Admin.Pages.UserManagement
             }
 
             Organizations = organizationSelectList;
+
+            UserStatuses = new List<SelectListItem>();
+
+            UserStatuses.Add(new SelectListItem { Text = "Pending", Value = "0" });
+            UserStatuses.Add(new SelectListItem { Text = "Active", Value = "1" });
+            UserStatuses.Add(new SelectListItem { Text = "Deactivated", Value = "2" });
 
             return Page();
         }
@@ -113,9 +124,16 @@ namespace DashboardWebApp.Areas.Admin.Pages.UserManagement
 
                     Organizations = organizationSelectList;
 
+                    UserStatuses = new List<SelectListItem>();
+
+                    UserStatuses.Add(new SelectListItem { Text = "Pending", Value = "0" });
+                    UserStatuses.Add(new SelectListItem { Text = "Active", Value = "1" });
+                    UserStatuses.Add(new SelectListItem { Text = "Deactivated", Value = "2" });
+
                     //user.UserName = Input.Email;
                     user.Fullname = Input.Name;
                     user.OrganizationId = Input.SelectedOrganizationId.GetValueOrDefault();
+                    user.UserStatus = Input.SelectedUserStatus.GetValueOrDefault();
                     user.IsAdmin = Input.IsAdmin;
 
                     var userExistingPolicyMappings = context.UserPolicyMappings.Where(x => x.UserId == userId).ToList();

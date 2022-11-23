@@ -26,8 +26,9 @@ namespace DashboardWebApp.ApiControllers
         {
             if (this.userService.GetCurrentUser().IsAdmin.GetValueOrDefault())
             {
+                var currentUser = this.userService.GetCurrentUser();
                 var context = this.dBFactory.GetDatabaseContext();
-                var users = context.Users.Include(x => x.ApplicationUser).AsQueryable().ToDataSourceResult(requestModel);
+                var users = context.Users.Include(x => x.ApplicationUser).Where(x => x.UserName != currentUser.UserName).AsQueryable().ToDataSourceResult(requestModel);
                 return users;
             }
 
