@@ -29,6 +29,7 @@ namespace DashboardWebApp.Areas.Admin.Pages.UserManagement
 
         [BindProperty]
         public int UserId { get; set; }
+        public int CurrentUserStatus { get; set; }
 
         public class UpdateInputModel
         {
@@ -69,6 +70,7 @@ namespace DashboardWebApp.Areas.Admin.Pages.UserManagement
             Input.HasAPIPermission = userPolicyMappings.Any(x => x.UserId == userId && x.PolicyId == apiPolicy.Id);
             Input.HasDashboardPermission = userPolicyMappings.Any(x => x.UserId == userId && x.PolicyId == dashboardPolicy.Id);
             Input.SelectedUserStatus = user.UserStatus;
+            CurrentUserStatus = user.UserStatus.GetValueOrDefault();
 
             var organizations = context.Organizations.ToList();
 
@@ -86,9 +88,11 @@ namespace DashboardWebApp.Areas.Admin.Pages.UserManagement
 
             UserStatuses = new List<SelectListItem>();
 
-            UserStatuses.Add(new SelectListItem { Text = "Pending", Value = "0" });
-            UserStatuses.Add(new SelectListItem { Text = "Active", Value = "1" });
-            UserStatuses.Add(new SelectListItem { Text = "Deactivated", Value = "2" });
+            if (user.UserStatus != 0)
+            {
+                UserStatuses.Add(new SelectListItem { Text = "Active", Value = "1" });
+                UserStatuses.Add(new SelectListItem { Text = "Deactivated", Value = "2" });
+            }
 
             return Page();
         }
@@ -126,9 +130,11 @@ namespace DashboardWebApp.Areas.Admin.Pages.UserManagement
 
                     UserStatuses = new List<SelectListItem>();
 
-                    UserStatuses.Add(new SelectListItem { Text = "Pending", Value = "0" });
-                    UserStatuses.Add(new SelectListItem { Text = "Active", Value = "1" });
-                    UserStatuses.Add(new SelectListItem { Text = "Deactivated", Value = "2" });
+                    if (user.UserStatus != 0)
+                    {
+                        UserStatuses.Add(new SelectListItem { Text = "Active", Value = "1" });
+                        UserStatuses.Add(new SelectListItem { Text = "Deactivated", Value = "2" });
+                    }
 
                     //user.UserName = Input.Email;
                     user.Fullname = Input.Name;

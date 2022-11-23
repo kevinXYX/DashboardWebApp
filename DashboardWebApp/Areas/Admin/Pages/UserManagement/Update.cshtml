@@ -22,10 +22,13 @@
         <label for="name" class="form-label">Organization</label>
         <select asp-for="Input.SelectedOrganizationId" class="form-control w-25" asp-items="@Model.Organizations"></select>
     </div>
-    <div class="mb-3">
-        <label for="name" class="form-label">User Status</label>
-        <select asp-for="Input.SelectedUserStatus" class="form-control w-25" asp-items="@Model.UserStatuses"></select>
-    </div>
+    @if (Model.CurrentUserStatus != 0)
+    {
+        <div class="mb-3">
+            <label for="name" class="form-label">User Status</label>
+            <select asp-for="Input.SelectedUserStatus" class="form-control w-25" asp-items="@Model.UserStatuses"></select>
+        </div>
+    }
     <div class="mb-3 form-check">
         <input type="checkbox" class="form-check-input" asp-for="Input.HasDashboardPermission" id="hasDashboardPermission">
         <label class="form-check-label" for="hasDashboardPermission">Dashboard Permission</label>
