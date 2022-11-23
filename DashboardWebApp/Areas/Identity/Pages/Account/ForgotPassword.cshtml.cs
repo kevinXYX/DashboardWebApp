@@ -8,12 +8,15 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using DashboardWebApp.Data;
+using DashboardWebApp.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 
 namespace DashboardWebApp.Areas.Identity.Pages.Account
 {
@@ -21,11 +24,13 @@ namespace DashboardWebApp.Areas.Identity.Pages.Account
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IEmailSender _emailSender;
+        private readonly IConfiguration _configuration;
 
-        public ForgotPasswordModel(UserManager<ApplicationUser> userManager, IEmailSender emailSender)
+        public ForgotPasswordModel(UserManager<ApplicationUser> userManager, IEmailSender emailSender, IConfiguration configuration)
         {
             _userManager = userManager;
             _emailSender = emailSender;
+            _configuration = configuration;
         }
 
         /// <summary>
@@ -68,13 +73,20 @@ namespace DashboardWebApp.Areas.Identity.Pages.Account
                 var callbackUrl = Url.Page(
                     "/Account/ResetPassword",
                     pageHandler: null,
-                    values: new { area = "Identity", code },
+                    values: new { area = "Identity", code, email = Crypto.EncryptString(user.Email) },
                     protocol: Request.Scheme);
 
-                await _emailSender.SendEmailAsync(
-                    Input.Email,
-                    "Reset Password",
-                    $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                var sendGridApiKey = _configuration.GetSection("SENDGRID_API_KEY");
+                var sendGridClient = new SendGridClient(sendGridApiKey.Value);
+                var msg = new SendGridMessage()
+                {
+                    From = new EmailAddress("test@dashboardapp.com", "Dashboard Admin"),
+                    Subject = "Reset Password",
+                    HtmlContent = $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>."
+                };
+
+                msg.AddTo(new EmailAddress(Input.Email, Input.Email));
+                var response = await sendGridClient.SendEmailAsync(msg);
 
                 return RedirectToPage("./ForgotPasswordConfirmation");
             }

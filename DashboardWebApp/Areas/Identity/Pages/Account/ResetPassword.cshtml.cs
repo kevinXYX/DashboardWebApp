@@ -7,6 +7,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Threading.Tasks;
 using DashboardWebApp.Data;
+using DashboardWebApp.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -58,6 +59,8 @@ namespace DashboardWebApp.Areas.Identity.Pages.Account
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
+            /// 
+            [Required]
             [DataType(DataType.Password)]
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
@@ -72,7 +75,7 @@ namespace DashboardWebApp.Areas.Identity.Pages.Account
 
         }
 
-        public IActionResult OnGet(string code = null)
+        public IActionResult OnGet(string code = null, string email = null)
         {
             if (code == null)
             {
@@ -82,14 +85,26 @@ namespace DashboardWebApp.Areas.Identity.Pages.Account
             {
                 Input = new InputModel
                 {
-                    Code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code))
+                    Code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code)),
+                    Email = Crypto.DecryptString(email)
                 };
                 return Page();
             }
         }
 
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostAsync(string emailAddress = null)
         {
+            if (string.IsNullOrEmpty(emailAddress))
+            {
+                ModelState.AddModelError("Email", "Invalid Email Address");
+
+                return Page();
+            }
+
+            Input.Email = Crypto.DecryptString(emailAddress);
+
+            ModelState.Remove("Input.Email");
+
             if (!ModelState.IsValid)
             {
                 return Page();

@@ -23,7 +23,7 @@ namespace DashboardWebApp.Service
         public User GetCurrentUser()
         {
             var userEmail = _user.FindFirst(ClaimTypes.Email)?.Value;
-            var user = _dbFactory.GetDatabaseContext().Users.Include(x => x.ApplicationUser).SingleOrDefault(x => x.UserName == userEmail);
+            var user = _dbFactory.GetDatabaseContext().Users.Include(x => x.ApplicationUser).Include(x => x.Organization).SingleOrDefault(x => x.UserName == userEmail);
             return user;
         }
 
@@ -47,6 +47,12 @@ namespace DashboardWebApp.Service
             var userEmail = _user.FindFirst(ClaimTypes.Email)?.Value;
             var context = _dbFactory.GetDatabaseContext();
             var user = context.Users.SingleOrDefault(x => x.UserName == userEmail);
+
+            if (user == null)
+            {
+                return false;
+            }
+
             var dashboardPolicy = context.UserPolicies.SingleOrDefault(x => x.PolicyName == "DashboardAppPermission");
             var userMapping = context.UserPolicyMappings.SingleOrDefault(x => x.UserId == user.UserId && x.PolicyId == dashboardPolicy.Id);
             return userMapping != null;

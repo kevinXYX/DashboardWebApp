@@ -25,6 +25,7 @@ namespace DashboardWebApp.Data
         public int? StorageUsedKB { get; set; }
         public bool? IsAdmin { get; set; }
         public int? UserStatus { get; set; }
+        public bool? ChangeEmailVerified { get; set; }
         public DateTime? CreatedDate { get; set; }    
         public virtual ApplicationUser ApplicationUser { get; set; }
         public virtual Organization Organization { get; set; }

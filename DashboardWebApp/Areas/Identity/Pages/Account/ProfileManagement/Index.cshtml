@@ -1,0 +1,30 @@
+﻿@page
+@model DashboardWebApp.Areas.Identity.Pages.Account.ProfileManagement.IndexModel
+@{
+    ViewData["Title"] = "Dashboard - Profile Management";
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+<div class="text-left">
+    <h3 class="display-7">Your Profile</h3>
+</div>
+<br />
+<form id="profileForm" method="post">
+    <div style="color: green; font-size: 21px; margin-bottom: 10px;"><span>@Model.StatusMessage</span></div>
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="mb-3">
+        <label for="email" class="form-label">Email address</label>
+        <input asp-for="Input.Email" type="email" class="form-control w-25" id="email">
+        <span asp-validation-for="Input.Email" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label for="name" class="form-label">Name</label>
+        <input asp-for="Input.Name" type="text" class="form-control w-25" id="name">
+        <span asp-validation-for="Input.Name" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label for="name" class="form-label">Organization</label>
+        <input asp-for="Input.OrganizationName" class="form-control w-25" disabled>
+    </div>
+    <button id="edit-profile-btn" type="submit" class="btn btn-primary">Edit</button>
+    <a href="/" type="button" class="btn btn-default">Back</a>
+</form>
