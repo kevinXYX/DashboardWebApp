@@ -32,6 +32,11 @@ namespace DashboardWebApp.Areas.Admin.Pages.UserManagement
 
         public async Task<IActionResult> OnGet(int userId)
         {
+            if (!_userService.IsUserAdmin() && !_userService.IsUserSuperAdmin())
+            {
+                return LocalRedirect("/");
+            }
+
             var user = _userService.GetUserById(userId);
 
             if (user == null)

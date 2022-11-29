@@ -24,6 +24,7 @@ namespace DashboardWebApp.Data
         public int? StorageLimitKB { get; set; }
         public int? StorageUsedKB { get; set; }
         public bool? IsAdmin { get; set; }
+        public bool? IsSuperAdmin { get; set; }
         public int? UserStatus { get; set; }
         public bool? ChangeEmailVerified { get; set; }
         public DateTime? CreatedDate { get; set; }    

@@ -1,4 +1,5 @@
-﻿using DashboardWebApp.Data;
+﻿using DashboardWebApp.Attributes;
+using DashboardWebApp.Data;
 using DashboardWebApp.Service;
 using KendoNET.DynamicLinq;
 using Microsoft.AspNetCore.Authorization;
@@ -8,7 +9,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DashboardWebApp.ApiControllers
 {
-    [Authorize]
     public class AdminController : ControllerBase
     {
         private readonly IDbFactory dBFactory;
@@ -20,47 +20,43 @@ namespace DashboardWebApp.ApiControllers
             this.userService = userService;
         }
 
+        [AdminAuthorize(isSuperAdmin: false)]
         [HttpPost]
         [Route("api/admin/users")]
         public DataSourceResult GetUsers([FromBody] DataSourceRequest requestModel)
         {
-            if (this.userService.GetCurrentUser().IsAdmin.GetValueOrDefault())
+            var currentUser = this.userService.GetCurrentUser();
+            var context = this.dBFactory.GetDatabaseContext();
+            var userOrganization = userService.GetCurrentUserOrganization();
+            var users = context.Users.Include(x => x.ApplicationUser)
+                .Include(x => x.Organization)
+                .Where(x => x.UserName != currentUser.UserName);
+            if (!this.userService.IsUserSuperAdmin())
             {
-                var currentUser = this.userService.GetCurrentUser();
-                var context = this.dBFactory.GetDatabaseContext();
-                var users = context.Users.Include(x => x.ApplicationUser).Where(x => x.UserName != currentUser.UserName).AsQueryable().ToDataSourceResult(requestModel);
-                return users;
+                users = users.Where(x => x.OrganizationId == userOrganization.OrganizationId);
             }
-
-            return null;
+            var result = users.AsQueryable().ToDataSourceResult(requestModel);
+            return result;
         }
 
+        [AdminAuthorize(isSuperAdmin: true)]
         [HttpPost]
         [Route("api/admin/organizations")]
         public DataSourceResult GetOrganizations([FromBody] DataSourceRequest requestModel)
         {
-            if (this.userService.GetCurrentUser().IsAdmin.GetValueOrDefault())
-            {
-                var context = this.dBFactory.GetDatabaseContext();
-                var organizations = context.Organizations.AsQueryable().ToDataSourceResult(requestModel);
-                return organizations;
-            }
-
-            return null;
+            var context = this.dBFactory.GetDatabaseContext();
+            var organizations = context.Organizations.AsQueryable().ToDataSourceResult(requestModel);
+            return organizations;
         }
 
+        [AdminAuthorize(isSuperAdmin: true)]
         [HttpPost]
         [Route("api/admin/userpolicies")]
         public DataSourceResult GetUserPolicies([FromBody] DataSourceRequest requestModel)
         {
-            if (this.userService.GetCurrentUser().IsAdmin.GetValueOrDefault())
-            {
-                var context = this.dBFactory.GetDatabaseContext();
-                var userPolicies = context.UserPolicies.AsQueryable().ToDataSourceResult(requestModel);
-                return userPolicies;
-            }
-
-            return null;
+            var context = this.dBFactory.GetDatabaseContext();
+            var userPolicies = context.UserPolicies.AsQueryable().ToDataSourceResult(requestModel);
+            return userPolicies;
         }
     }
 }

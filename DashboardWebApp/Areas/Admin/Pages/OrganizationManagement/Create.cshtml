@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Dashboard - Admin Organization Management Create Organization";
 }
+
 <div class="text-left">
     <h3 class="display-7">Create New Organization</h3>
 </div>
@@ -13,6 +14,11 @@
         <label for="name" class="form-label">Name</label>
         <input asp-for="Input.OrganizationName" type="text" class="form-control w-25" id="organizationName">
         <span asp-validation-for="Input.OrganizationName" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label for="userQuota" class="form-label">User Quota</label>
+        <input asp-for="Input.UserQuota" type="number" class="form-control w-25" id="userQuota">
+        <span asp-validation-for="Input.UserQuota" class="text-danger"></span>
     </div>
     <button id="create-submit" type="submit" class="btn btn-primary">Submit</button>
     <a href="/Admin/OrganizationManagement" type="button" class="btn btn-default">Back</a>

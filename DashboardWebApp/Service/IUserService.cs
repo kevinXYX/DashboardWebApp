@@ -8,6 +8,7 @@ namespace DashboardWebApp.Service
         User GetCurrentUser();
         Organization GetCurrentUserOrganization();
         bool IsUserAdmin();
+        bool IsUserSuperAdmin();
         bool UserHasDashboardPermission();
         bool IsUserDeactivated();
     }

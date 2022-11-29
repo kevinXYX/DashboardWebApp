@@ -44,42 +44,45 @@
             <span>Dashboard</span></a>
             </li>*@
 
-            @if (userService.IsUserAdmin())
+            @if (userService.IsUserAdmin() || userService.IsUserSuperAdmin())
             {
                 <br />
                 <div class="sidebar-heading">
                     Admin
                 </div>
-                <li class="nav-item">
-                    <a class="nav-link collapsed" data-bs-toggle="collapse" href="#collapsePolicyManagement" data-toggle="collapse" data-target="#collapsePolicyManagement"
+                @if (userService.IsUserSuperAdmin())
+                {
+                    <li class="nav-item">
+                        <a class="nav-link collapsed" data-bs-toggle="collapse" href="#collapsePolicyManagement" data-toggle="collapse" data-target="#collapsePolicyManagement"
                    aria-expanded="true" aria-controls="collapsePolicyManagement">
-                        <i class="fas fa-fw fa-book"></i>
-                        <span>Policy Management</span>
-                    </a>
-                    <div id="collapsePolicyManagement" class="collapse" aria-labelledby="headingUtilities"
+                            <i class="fas fa-fw fa-book"></i>
+                            <span>Policy Management</span>
+                        </a>
+                        <div id="collapsePolicyManagement" class="collapse" aria-labelledby="headingUtilities"
                      data-parent="#accordionSidebar">
-                        <div class="bg-white py-2 collapse-inner rounded">
-                            <a class="collapse-item" href="#">Create New Policy Group</a>
-                            <a class="collapse-item" href="#">Create New Policy</a>
-                            <a class="collapse-item" href="/Admin/PolicyManagement/Policy">Policy List</a>
-                            <a class="collapse-item" href="#">Policy Group List</a>
+                            <div class="bg-white py-2 collapse-inner rounded">
+                                <a class="collapse-item" href="#">Create New Policy Group</a>
+                                <a class="collapse-item" href="#">Create New Policy</a>
+                                <a class="collapse-item" href="/Admin/PolicyManagement/Policy">Policy List</a>
+                                <a class="collapse-item" href="#">Policy Group List</a>
+                            </div>
                         </div>
-                    </div>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link collapsed" data-bs-toggle="collapse" href="#collapseOrganizationManagement" data-toggle="collapse" data-target="#collapseOrganizationManagement"
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link collapsed" data-bs-toggle="collapse" href="#collapseOrganizationManagement" data-toggle="collapse" data-target="#collapseOrganizationManagement"
                    aria-expanded="true" aria-controls="collapseOrganizationManagement">
-                        <i class="fas fa-fw fa-building"></i>
-                        <span>Manage Organization</span>
-                    </a>
-                    <div id="collapseOrganizationManagement" class="collapse" aria-labelledby="headingUtilities"
+                            <i class="fas fa-fw fa-building"></i>
+                            <span>Manage Organization</span>
+                        </a>
+                        <div id="collapseOrganizationManagement" class="collapse" aria-labelledby="headingUtilities"
                      data-parent="#accordionSidebar">
-                        <div class="bg-white py-2 collapse-inner rounded">
-                            <a class="collapse-item" href="/Admin/OrganizationManagement/Create">Create New</a>
-                            <a class="collapse-item" href="/Admin/OrganizationManagement">List</a>
+                            <div class="bg-white py-2 collapse-inner rounded">
+                                <a class="collapse-item" href="/Admin/OrganizationManagement/Create">Create New</a>
+                                <a class="collapse-item" href="/Admin/OrganizationManagement">List</a>
+                            </div>
                         </div>
-                    </div>
-                </li>
+                    </li>
+                }
                 <li class="nav-item">
                     <a class="nav-link collapsed" data-bs-toggle="collapse" href="#collapseUserManagement" data-toggle="collapse" data-target="#collapseUserManagement"
                    aria-expanded="true" aria-controls="collapseUserManagement">
@@ -144,7 +147,7 @@
                             <!-- Dropdown - User Information -->
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
                                  aria-labelledby="userDropdown">
-                                 <a class="dropdown-item" href="/Identity/Account/ProfileManagement">
+                                <a class="dropdown-item" href="/Identity/Account/ProfileManagement">
                                     <i class="fas fa-regular fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
                                     User Profile
                                 </a>

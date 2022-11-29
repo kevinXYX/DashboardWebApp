@@ -12,6 +12,7 @@ using System.Text.Encodings.Web;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 using DashboardWebApp.Helpers;
+using DashboardWebApp.Service;
 
 namespace DashboardWebApp.Areas.Admin.Views.UserManagement
 {
@@ -24,6 +25,7 @@ namespace DashboardWebApp.Areas.Admin.Views.UserManagement
         private readonly IEmailSender _emailSender;
         private readonly IDbFactory _dbFactory;
         private readonly IConfiguration configuration;
+        private readonly IUserService userService;
 
         public CreateModel(
             UserManager<ApplicationUser> userManager,
@@ -31,7 +33,8 @@ namespace DashboardWebApp.Areas.Admin.Views.UserManagement
             SignInManager<ApplicationUser> signInManager,
             IDbFactory dbFactory,
             IEmailSender emailSender,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IUserService userService)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -40,6 +43,7 @@ namespace DashboardWebApp.Areas.Admin.Views.UserManagement
             _emailSender = emailSender;
             _dbFactory = dbFactory;
             this.configuration = configuration;
+            this.userService = userService;
         }
 
         [BindProperty]
@@ -51,7 +55,7 @@ namespace DashboardWebApp.Areas.Admin.Views.UserManagement
         public class CreateInputModel
         {
             [Required]
-            [EmailAddress]  
+            [EmailAddress]
             public string Email { get; set; }
 
             [Required]
@@ -67,6 +71,13 @@ namespace DashboardWebApp.Areas.Admin.Views.UserManagement
 
         public async Task OnGetAsync(string returnUrl = null)
         {
+            var isAuthenticated = userService.IsUserAdmin() || userService.IsUserSuperAdmin();
+
+            if (!isAuthenticated)
+            {
+                LocalRedirect("/");
+            }
+
             SetOrganizationDropdown();
         }
 
@@ -80,6 +91,16 @@ namespace DashboardWebApp.Areas.Admin.Views.UserManagement
             if (ModelState.IsValid)
             {
                 var context = _dbFactory.GetDatabaseContext();
+
+                var userOrganization = userService.GetCurrentUserOrganization();
+
+                var numberOfUsers = context.Users.Where(x => x.OrganizationId == userOrganization.OrganizationId);
+
+                if (numberOfUsers.Count() >= userOrganization.UserQuota)
+                {
+                    ModelState.AddModelError("", "Unable to create user, the number of users for this organization have exceeded the user quota");
+                    return Page();
+                }
 
                 var isUserExists = context.Users.Any(x => x.UserName.ToLower() == Input.Email.ToLower());
 
@@ -102,7 +123,7 @@ namespace DashboardWebApp.Areas.Admin.Views.UserManagement
                 {
                     var userId = await _userManager.GetUserIdAsync(user);
                     var userInDb = context.ApplicationUsers.Include(x => x.User).SingleOrDefault(x => x.Id == userId);
-                    
+
                     if (userInDb != null)
                     {
                         userInDb.User.AspNetUserId = userInDb.UserId;
@@ -193,7 +214,17 @@ namespace DashboardWebApp.Areas.Admin.Views.UserManagement
 
         private void SetOrganizationDropdown()
         {
+            var isAdmin = userService.IsUserAdmin();
+            var isSuperAdmin = userService.IsUserSuperAdmin();
+
+            var userOrganization = userService.GetCurrentUserOrganization();
+
             var organizations = _dbFactory.GetDatabaseContext().Organizations.ToList();
+
+            if (isAdmin && !isSuperAdmin)
+            {
+                organizations = organizations.Where(x => x.OrganizationId == userOrganization.OrganizationId).ToList();
+            }
 
             var organizationSelectList = new List<SelectListItem>();
 

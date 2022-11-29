@@ -12,6 +12,7 @@ namespace DashboardWebApp.Data
         [Key]
         public int OrganizationId { get; set; }
         public string OrganizationName { get; set; }
+        public long? UserQuota { get; set; }  
         public DateTime? CreatedDate { get; set; }
         public virtual ICollection<User> Users { get; set; }
     }

@@ -48,6 +48,11 @@ namespace DashboardWebApp.Areas.Admin.Pages.UserManagement
 
         public async Task<IActionResult> OnGet(int userId)
         {
+            if (!_userService.IsUserAdmin() && !_userService.IsUserSuperAdmin())
+            {
+                return LocalRedirect("/");
+            }
+
             var user = _userService.GetUserById(userId);
 
             if (user == null)
@@ -72,19 +77,7 @@ namespace DashboardWebApp.Areas.Admin.Pages.UserManagement
             Input.SelectedUserStatus = user.UserStatus;
             CurrentUserStatus = user.UserStatus.GetValueOrDefault();
 
-            var organizations = context.Organizations.ToList();
-
-            var organizationSelectList = new List<SelectListItem>();
-
-            if (organizations != null)
-            {
-                organizations.ForEach(x =>
-                {
-                    organizationSelectList.Add(new SelectListItem { Text = x.OrganizationName, Value = x.OrganizationId.ToString() });
-                });
-            }
-
-            Organizations = organizationSelectList;
+            SetOrganizationDropdown();
 
             UserStatuses = new List<SelectListItem>();
 
@@ -114,19 +107,7 @@ namespace DashboardWebApp.Areas.Admin.Pages.UserManagement
                         return Redirect("/Identity/Account/Login");
                     }
 
-                    var organizations = context.Organizations.ToList();
-
-                    var organizationSelectList = new List<SelectListItem>();
-
-                    if (organizations != null)
-                    {
-                        organizations.ForEach(x =>
-                        {
-                            organizationSelectList.Add(new SelectListItem { Text = x.OrganizationName, Value = x.OrganizationId.ToString() });
-                        });
-                    }
-
-                    Organizations = organizationSelectList;
+                    SetOrganizationDropdown();
 
                     UserStatuses = new List<SelectListItem>();
 
@@ -199,6 +180,33 @@ namespace DashboardWebApp.Areas.Admin.Pages.UserManagement
             }
 
             return Page();
+        }
+
+        private void SetOrganizationDropdown()
+        {
+            var isAdmin = _userService.IsUserAdmin();
+            var isSuperAdmin = _userService.IsUserSuperAdmin();
+
+            var userOrganization = _userService.GetCurrentUserOrganization();
+
+            var organizations = _dbFactory.GetDatabaseContext().Organizations.ToList();
+
+            if (isAdmin && !isSuperAdmin)
+            {
+                organizations = organizations.Where(x => x.OrganizationId == userOrganization.OrganizationId).ToList();
+            }
+
+            var organizationSelectList = new List<SelectListItem>();
+
+            if (organizations != null)
+            {
+                organizations.ForEach(x =>
+                {
+                    organizationSelectList.Add(new SelectListItem { Text = x.OrganizationName, Value = x.OrganizationId.ToString() });
+                });
+            }
+
+            Organizations = organizationSelectList;
         }
     }
 }

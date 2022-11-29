@@ -42,6 +42,13 @@ namespace DashboardWebApp.Service
             return isUserAdmin.GetValueOrDefault();
         }
 
+        public bool IsUserSuperAdmin()
+        {
+            var userEmail = _user.FindFirst(ClaimTypes.Email)?.Value;
+            var isUserAdmin = _dbFactory.GetDatabaseContext().Users.SingleOrDefault(x => x.UserName == userEmail)?.IsSuperAdmin;
+            return isUserAdmin.GetValueOrDefault();
+        }
+
         public bool UserHasDashboardPermission()
         {
             var userEmail = _user.FindFirst(ClaimTypes.Email)?.Value;

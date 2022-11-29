@@ -15,7 +15,7 @@ namespace DashboardWebApp.Areas.Admin.Views.UserManagement
 
         public async Task<IActionResult> OnGet()
         {
-            if (!_userService.IsUserAdmin())
+            if (!_userService.IsUserAdmin() && !_userService.IsUserSuperAdmin())
             {
                 return LocalRedirect("/");
             }
