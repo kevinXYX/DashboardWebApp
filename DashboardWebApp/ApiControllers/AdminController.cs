@@ -29,8 +29,7 @@ namespace DashboardWebApp.ApiControllers
             var context = this.dBFactory.GetDatabaseContext();
             var userOrganization = userService.GetCurrentUserOrganization();
             var users = context.Users.Include(x => x.ApplicationUser)
-                .Include(x => x.Organization)
-                .Where(x => x.UserName != currentUser.UserName);
+                .Include(x => x.Organization).AsEnumerable();
             if (!this.userService.IsUserSuperAdmin())
             {
                 users = users.Where(x => x.OrganizationId == userOrganization.OrganizationId);
