@@ -1,177 +1,172 @@
-﻿using KendoNET.DynamicLinq;
+﻿using DashboardWebApp.Data;
+using DashboardWebApp.Models;
+using DashboardWebApp.Service;
+using KendoNET.DynamicLinq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 
 namespace DashboardWebApp.ApiControllers
 {
     [Authorize]
     public class BooksController : ControllerBase
     {
+        private readonly IDbFactory dbFactory;
+        private readonly IUserService userService;
+        public BooksController(IDbFactory dbFactory, IUserService userService)
+        {
+            this.dbFactory = dbFactory;
+            this.userService = userService;
+        }
+
         [HttpPost]
         [Route("api/books/getBooks")]
         public DataSourceResult GetBooks([FromBody] DataSourceRequest requestModel)
         {
-            var books = new List<Book>();
-            books.Add(new Book
+            var videoFilterViewModelSessionString = HttpContext.Session.GetString(nameof(VideoFilterViewModel));
+            var videoFilterViewModel = new VideoFilterViewModel();
+
+            if (!string.IsNullOrEmpty(videoFilterViewModelSessionString))
             {
-                Id = 1,
-                UserId = 12,
-                TypeId = 3,
-                Created = "09/26/2022",
-                Isbn = "19943949924",
-                FileName = "file1",
-                UploadDate = "09/26/2022",
-                VideoDuration = 30,
-                FileSize = 30094
-            });
-            books.Add(new Book
+                videoFilterViewModel = Newtonsoft.Json.JsonConvert.DeserializeObject<VideoFilterViewModel>(videoFilterViewModelSessionString);
+            }
+
+            var context = dbFactory.GetDatabaseContext();
+            var organization = this.userService.GetCurrentUserOrganization();
+            var usersWithinOrganization = context.Users.Where(x => x.OrganizationId == organization.OrganizationId);
+            var userIds = usersWithinOrganization.Select(x => x.UserId).ToList();
+            var bookVideoLabels = context.BookVideoLabels.Where(x => userIds.Contains(x.UserId)).ToList();
+            var bookTypes = context.BookTypes.ToList();
+            var bookVideoComments = context.BookVideoComments.Where(x => userIds.Contains(x.UserId)).ToList();
+
+            var sqlParams = new SqlParameter[] {
+              new SqlParameter() { ParameterName = "@ISBN", SqlDbType = System.Data.SqlDbType.VarChar, Value = videoFilterViewModel.ISBN ?? Convert.DBNull },
+              new SqlParameter() { ParameterName = "@DateTakenFrom", SqlDbType = System.Data.SqlDbType.VarChar, Value = videoFilterViewModel.DateTakenFrom.GetValueOrDefault().ToString("yyyy-MM-dd") ?? Convert.DBNull },
+              new SqlParameter() { ParameterName = "@DateTakenTo", SqlDbType = System.Data.SqlDbType.VarChar, Value = videoFilterViewModel.DateTakenTo.GetValueOrDefault().ToString("yyyy-MM-dd") ?? Convert.DBNull },
+              new SqlParameter() { ParameterName = "@DateUploadedFrom", SqlDbType = System.Data.SqlDbType.VarChar, Value = videoFilterViewModel.DateUploadedFrom.GetValueOrDefault().ToString("yyyy-MM-dd") ?? Convert.DBNull },
+              new SqlParameter() { ParameterName = "@DateUploadedTo", SqlDbType = System.Data.SqlDbType.VarChar, Value = videoFilterViewModel.DateUploadedTo.GetValueOrDefault().ToString("yyyy-MM-dd") ?? Convert.DBNull },
+              new SqlParameter() { ParameterName = "@UserNote", SqlDbType = System.Data.SqlDbType.VarChar, Value = videoFilterViewModel.UserNote ?? Convert.DBNull },
+              new SqlParameter() { ParameterName = "@VideoDurationFrom", SqlDbType = System.Data.SqlDbType.Int, Value = videoFilterViewModel.VideoDurationFrom ?? Convert.DBNull },
+              new SqlParameter() { ParameterName = "@VideoDurationTo", SqlDbType = System.Data.SqlDbType.Int, Value = videoFilterViewModel.VideoDurationTo ?? Convert.DBNull },
+              new SqlParameter() { ParameterName = "@FileSizeFrom", SqlDbType = System.Data.SqlDbType.Int, Value = videoFilterViewModel.FileSizeFrom ?? Convert.DBNull },
+              new SqlParameter() { ParameterName = "@FileSizeTo", SqlDbType = System.Data.SqlDbType.Int, Value = videoFilterViewModel.FileSizeTo ?? Convert.DBNull },
+            };
+
+            var books = context.Books.FromSqlRaw<Books>("EXEC [dbo].[GetBooks] @ISBN, @DateTakenFrom, @DateTakenTo, @DateUploadedFrom, " +
+                "@DateUploadedTo, @UserNote, @VideoDurationFrom, " +
+                "@VideoDurationTo, @FileSizeFrom, @FileSizeTo", sqlParams).ToList();
+
+            books = books.Where(x => userIds.Contains(x.UserId)).ToList();
+
+            if (videoFilterViewModel.SelectedTakenByUsers != null && videoFilterViewModel.SelectedTakenByUsers.Length > 0)
             {
-                Id = 2,
-                UserId = 12,
-                TypeId = 3,
-                Created = "09/26/2022",
-                Isbn = "29943949924",
-                FileName = "file1",
-                UploadDate = "09/26/2022",
-                VideoDuration = 30,
-                FileSize = 30094
-            });
-            books.Add(new Book
+                var selectedTakenByUsers = new List<int>();
+
+                videoFilterViewModel.SelectedTakenByUsers.ToList().ForEach(x => selectedTakenByUsers.Add(int.Parse(x)));
+
+                books = books.Where(x => selectedTakenByUsers.Contains(x.UserId)).ToList();
+            }
+
+
+            if (videoFilterViewModel.SelectedBookTypes != null && videoFilterViewModel.SelectedBookTypes.Length > 0)
             {
-                Id = 3,
-                UserId = 12,
-                TypeId = 3,
-                Created = "09/26/2022",
-                Isbn = "39943949924",
-                FileName = "file1",
-                UploadDate = "09/26/2022",
-                VideoDuration = 30,
-                FileSize = 30094
-            });
-            books.Add(new Book
+                var selectedBookTypes = new List<int>();
+
+                videoFilterViewModel.SelectedBookTypes.ToList().ForEach(x => selectedBookTypes.Add(int.Parse(x)));
+
+                books = books.Where(x => selectedBookTypes.Contains(x.TypeId.GetValueOrDefault())).ToList();
+            }
+
+            if (videoFilterViewModel.SelectedBookVideoLabels != null && videoFilterViewModel.SelectedBookVideoLabels.Length > 0)
             {
-                Id = 4,
-                UserId = 12,
-                TypeId = 3,
-                Created = "09/26/2022",
-                Isbn = "49943949924",
-                FileName = "file1",
-                UploadDate = "09/26/2022",
-                VideoDuration = 30,
-                FileSize = 30094
-            });
-            books.Add(new Book
+                var selectedBookVideoLabels = new List<int>();
+
+                videoFilterViewModel.SelectedBookVideoLabels.ToList().ForEach(x => selectedBookVideoLabels.Add(int.Parse(x)));
+
+                var filteredBookVideoLabelBookIds = bookVideoLabels.Where(x => selectedBookVideoLabels.Contains(x.Id)).Select(x => x.BookId);
+
+                books = books.Where(x => filteredBookVideoLabelBookIds.Contains(x.Id)).ToList();
+            }
+
+            if (videoFilterViewModel.SelectedHasComments != null && videoFilterViewModel.SelectedHasComments.Length > 0)
             {
-                Id = 5,
-                UserId = 12,
-                TypeId = 3,
-                Created = "09/26/2022",
-                Isbn = "59943949924",
-                FileName = "file1",
-                UploadDate = "09/26/2022",
-                VideoDuration = 30,
-                FileSize = 30094
-            });
-            books.Add(new Book
+                var selectedHasComments = new List<int>();
+
+                videoFilterViewModel.SelectedHasComments.ToList().ForEach(x => selectedHasComments.Add(int.Parse(x)));
+                var bookVideoCommentsBookIds = bookVideoComments.Select(x => x.BookId).ToList();
+
+                if (selectedHasComments.Count() == 1 && selectedHasComments.Any(x => x == 0))
+                {
+                    books = books.Where(x => !bookVideoCommentsBookIds.Contains(x.Id)).ToList();
+                }
+                else if (selectedHasComments.Count() == 1 && selectedHasComments.Any(x => x == 1))
+                {
+                    books = books.Where(x => bookVideoCommentsBookIds.Contains(x.Id)).ToList();
+                }
+                else
+                {
+                    if (selectedHasComments.Count() == 2)
+                    {
+                        books = books.Where(x => bookVideoCommentsBookIds.Contains(x.Id) || !bookVideoCommentsBookIds.Contains(x.Id)).ToList();
+                    }
+                }
+            }
+
+            var booksViewModel = new List<BooksViewModel>();
+
+            books = books.GroupBy(x => x.Id).Select(x => x.FirstOrDefault()).ToList();
+
+            books.ForEach(x =>
             {
-                Id = 6,
-                UserId = 12,
-                TypeId = 3,
-                Created = "09/26/2022",
-                Isbn = "69943949924",
-                FileName = "file1",
-                UploadDate = "09/26/2022",
-                VideoDuration = 30,
-                FileSize = 30094
+                var user = usersWithinOrganization?.SingleOrDefault(b => b.UserId == x.UserId)?.Fullname ?? usersWithinOrganization?.SingleOrDefault(b => b.UserId == x.UserId)?.UserName;
+                var bookType = bookTypes.SingleOrDefault(b => b.Id == x.TypeId.GetValueOrDefault())?.Name;
+
+                booksViewModel.Add(new BooksViewModel
+                {
+                    Id = x.Id,
+                    BookId = x.BookId,
+                    Isbn = x.Isbn,
+                    Labels = string.Join(",", bookVideoLabels.Where(b => b.BookId == x.Id).Select(x => x.Label)),
+                    User = user,
+                    BookType = bookType,
+                    Note = x.Note,
+                    VideoDuration = x.VideoDuration,
+                    FileSize = x.FileSize,
+                    DateTaken = x.Created.ToString("dd MMM yyyy hh:mm tt"),
+                    DateUploaded = x.UploadDate.GetValueOrDefault().ToString("dd MMM yyyy hh:mm tt"),
+                    Comment = bookVideoComments.Any(b => b.BookId == x.Id) ? "Yes" : "No"
+                });
             });
-            books.Add(new Book
-            {
-                Id = 7,
-                UserId = 12,
-                TypeId = 3,
-                Created = "09/26/2022",
-                Isbn = "69943949924",
-                FileName = "file1",
-                UploadDate = "09/26/2022",
-                VideoDuration = 30,
-                FileSize = 30094
-            });
-            books.Add(new Book
-            {
-                Id = 8,
-                UserId = 12,
-                TypeId = 3,
-                Created = "09/26/2022",
-                Isbn = "69943949924",
-                FileName = "file1",
-                UploadDate = "09/26/2022",
-                VideoDuration = 30,
-                FileSize = 30094
-            });
-            books.Add(new Book
-            {
-                Id = 9,
-                UserId = 12,
-                TypeId = 3,
-                Created = "09/26/2022",
-                Isbn = "69943949924",
-                FileName = "file1",
-                UploadDate = "09/26/2022",
-                VideoDuration = 30,
-                FileSize = 30094
-            });
-            books.Add(new Book
-            {
-                Id = 10,
-                UserId = 12,
-                TypeId = 3,
-                Created = "09/26/2022",
-                Isbn = "69943949924",
-                FileName = "file1",
-                UploadDate = "09/26/2022",
-                VideoDuration = 30,
-                FileSize = 30094
-            });
-            books.Add(new Book
-            {
-                Id = 11,
-                UserId = 12,
-                TypeId = 3,
-                Created = "09/26/2022",
-                Isbn = "69943949924",
-                FileName = "file1",
-                UploadDate = "09/26/2022",
-                VideoDuration = 30,
-                FileSize = 30094
-            });
-            books.Add(new Book
-            {
-                Id = 12,
-                UserId = 12,
-                TypeId = 3,
-                Created = "09/26/2022",
-                Isbn = "69943949924",
-                FileName = "file1",
-                UploadDate = "09/26/2022",
-                VideoDuration = 30,
-                FileSize = 30094
-            });
-            return books.AsQueryable().ToDataSourceResult(requestModel);
+
+            return booksViewModel.AsQueryable().ToDataSourceResult(requestModel);
+        }
+
+        [HttpPost]
+        [Route("api/books/filterBooks")]
+        public IActionResult FilterBooks(VideoFilterViewModel videoFilterViewModel)
+        {
+            HttpContext.Session.SetString(nameof(VideoFilterViewModel), Newtonsoft.Json.JsonConvert.SerializeObject(videoFilterViewModel));
+            return Ok();
+        }
+
+        [HttpPost]
+        [Route("api/books/resetFilters")]
+        public IActionResult ResetFilters()
+        {
+            HttpContext.Session.Remove(nameof(VideoFilterViewModel));
+            return Ok();
         }
     }
 
-    public class Book
+    public class BooksViewModel : Books
     {
-        public int Id { get; set; }
-        public int UserId { get; set; }
-        public int TypeId { get; set; }
-        public string Created { get; set; }
-        public string Isbn { get; set; }
-        public string Note { get; set; }
-        public string FileName { get; set; }
-        public int FileSize { get; set; }
-        public int VideoDuration { get; set; }
-        public string UploadDate { get; set; }
+        public string Labels { get; set; }
+        public string User { get; set; }
+        public string BookType { get; set; }
+        public string DateTaken { get; set; }
+        public string DateUploaded { get; set; }
+        public string Comment { get; set; }
     }
 }

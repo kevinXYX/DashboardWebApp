@@ -7,6 +7,8 @@ namespace DashboardWebApp.Data
         public User()
         {
             UserPolicyMappings = new HashSet<UserPolicyMapping>();
+            Books = new HashSet<Books>();
+            BookVideos = new HashSet<BookVideos>();
         }
 
         [Key]
@@ -31,5 +33,8 @@ namespace DashboardWebApp.Data
         public virtual ApplicationUser ApplicationUser { get; set; }
         public virtual Organization Organization { get; set; }
         public virtual ICollection<UserPolicyMapping>? UserPolicyMappings { get; set; }
+        public virtual ICollection<Books> Books { get; set; }
+        public virtual ICollection<BookVideos> BookVideos { get; set; }
+        public virtual ICollection<BookVideoComments> BookVideoComments { get; set; }
     }
 }

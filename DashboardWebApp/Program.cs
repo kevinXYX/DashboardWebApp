@@ -24,6 +24,11 @@ builder.Services.AddTransient<ClaimsPrincipal>(s =>
 builder.Services.AddScoped<IDbFactory, DbFactory>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(5);
+    options.Cookie.HttpOnly = true;
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -52,5 +57,6 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Dashboard}/{action=Index}/{id?}");
 app.MapRazorPages();
+app.UseSession();
 
 app.Run();

@@ -11,11 +11,13 @@ namespace DashboardWebApp.Controllers
     {
         private readonly IUserService userService;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly IDbFactory dbFactory;
 
-        public DashboardController(IUserService userService, SignInManager<ApplicationUser> signInManager)
+        public DashboardController(IUserService userService, SignInManager<ApplicationUser> signInManager, IDbFactory dbFactory)
         {
             this.userService = userService;
             _signInManager = signInManager;
+            this.dbFactory = dbFactory;
         }
 
         public async Task<IActionResult> Index()

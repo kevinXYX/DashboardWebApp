@@ -93,6 +93,150 @@ namespace DashboardWebApp.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("DashboardWebApp.Data.Books", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int>("BookId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BookVideosId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FileCheckSum")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileSize")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("InstallationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Isbn")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StageId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TypeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UploadDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("VideoDuration")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookVideosId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Books", (string)null);
+                });
+
+            modelBuilder.Entity("DashboardWebApp.Data.BookTypes", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BookTypes", (string)null);
+                });
+
+            modelBuilder.Entity("DashboardWebApp.Data.BookVideoLabels", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int>("BookId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("BookVideoLabels", (string)null);
+                });
+
+            modelBuilder.Entity("DashboardWebApp.Data.BookVideos", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileSize")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("VideoUri")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("BookVideos", (string)null);
+                });
+
             modelBuilder.Entity("DashboardWebApp.Data.Organization", b =>
                 {
                     b.Property<int>("OrganizationId")
@@ -107,6 +251,9 @@ namespace DashboardWebApp.Data.Migrations
                     b.Property<string>("OrganizationName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("UserQuota")
+                        .HasColumnType("bigint");
 
                     b.HasKey("OrganizationId");
 
@@ -127,6 +274,9 @@ namespace DashboardWebApp.Data.Migrations
                     b.Property<string>("BucketName")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool?>("ChangeEmailVerified")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("datetime2");
 
@@ -137,6 +287,9 @@ namespace DashboardWebApp.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool?>("IsAdmin")
+                        .HasColumnType("bit");
+
+                    b.Property<bool?>("IsSuperAdmin")
                         .HasColumnType("bit");
 
                     b.Property<string>("LogoFileName")
@@ -193,7 +346,7 @@ namespace DashboardWebApp.Data.Migrations
 
                     b.HasIndex("PolicyGroupId");
 
-                    b.ToTable("UserPolicies");
+                    b.ToTable("UserPolicy", (string)null);
                 });
 
             modelBuilder.Entity("DashboardWebApp.Data.UserPolicyGroup", b =>
@@ -233,7 +386,7 @@ namespace DashboardWebApp.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserPolicyMappings");
+                    b.ToTable("UserPolicyMapping", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -385,6 +538,58 @@ namespace DashboardWebApp.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("DashboardWebApp.Data.Books", b =>
+                {
+                    b.HasOne("DashboardWebApp.Data.BookVideos", "BookVideos")
+                        .WithMany()
+                        .HasForeignKey("BookVideosId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DashboardWebApp.Data.User", "User")
+                        .WithMany("Books")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_Books_UserId");
+
+                    b.Navigation("BookVideos");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DashboardWebApp.Data.BookVideoLabels", b =>
+                {
+                    b.HasOne("DashboardWebApp.Data.Books", "Book")
+                        .WithMany("BookVideoLabels")
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_BookVideoLabels_BookId");
+
+                    b.HasOne("DashboardWebApp.Data.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DashboardWebApp.Data.BookVideos", b =>
+                {
+                    b.HasOne("DashboardWebApp.Data.User", "User")
+                        .WithMany("BookVideos")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_BookVideos_Users");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("DashboardWebApp.Data.User", b =>
                 {
                     b.HasOne("DashboardWebApp.Data.Organization", "Organization")
@@ -481,6 +686,11 @@ namespace DashboardWebApp.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("DashboardWebApp.Data.Books", b =>
+                {
+                    b.Navigation("BookVideoLabels");
+                });
+
             modelBuilder.Entity("DashboardWebApp.Data.Organization", b =>
                 {
                     b.Navigation("Users");
@@ -490,6 +700,10 @@ namespace DashboardWebApp.Data.Migrations
                 {
                     b.Navigation("ApplicationUser")
                         .IsRequired();
+
+                    b.Navigation("BookVideos");
+
+                    b.Navigation("Books");
 
                     b.Navigation("UserPolicyMappings");
                 });
