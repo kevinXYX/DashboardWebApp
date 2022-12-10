@@ -26,10 +26,11 @@
         font-weight: bold;
     }
 </style>
-<link href="https://cdn.rawgit.com/davidstutz/bootstrap-multiselect/master/dist/css/bootstrap-multiselect.css" rel="stylesheet" type="text/css" />
+<link href="~/css/multiselect/bootstrap-multiselect.min.css" rel="stylesheet" type="text/css" />
 <div class="text-left">
     <h3 class="display-">Videos</h3>
 </div>
+<br/>
 <form id="filterForm" method="post">
     <div class="mb-3 flex">
         <label for="name" class="form-label center-self">ISBN</label>
@@ -117,7 +118,7 @@
             <a style="margin-top: 10px;" type="button" class="btn btn-secondary">Add a label</a>
         </div>
     </script>
-    <script src="https://cdn.rawgit.com/davidstutz/bootstrap-multiselect/master/dist/js/bootstrap-multiselect.js" type="text/javascript"></script>
+    <script src="~/js/multiselect/bootstrap-multiselect.min.js" type="text/javascript"></script>
     <script>
         $(document).ready(function() {
             $("#videos-grid").kendoGrid({
@@ -187,7 +188,7 @@
                 }, {
                     field: "user",
                     title: "User",
-                    width: 100
+                    width: 150
                 }, {
                     field: "bookType",
                     title: "BookType",
