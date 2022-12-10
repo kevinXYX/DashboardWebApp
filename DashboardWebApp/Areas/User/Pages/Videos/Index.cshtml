@@ -30,7 +30,7 @@
 <form id="filterForm" method="post">
     <div class="mb-3 flex">
         <label for="name" class="form-label center-self">ISBN</label>
-        <input asp-for="Input.ISBN" type="text" class="form-control w-25 ml-3" id="isbn">
+        <input asp-for="Input.ISBN" type="text" class="form-control w-25 ml-3" id="isbn" placeholder="contains">
     </div>
     <div class="mb-3 flex">
         <label for="dateTaken" class="form-label center-self">Date taken</label>
@@ -56,7 +56,7 @@
     </div>
     <div class="mb-3 flex">
         <label for="name" class="form-label center-self">User note</label>
-        <input asp-for="Input.UserNote" type="text" class="form-control w-25 ml-3" id="userNote">
+        <input asp-for="Input.UserNote" type="text" class="form-control w-25 ml-3" id="userNote" placeholder="contains">
     </div>
     <div class="mb-3">
         <label for="bookType" class="form-label center-self">Book Type</label>
