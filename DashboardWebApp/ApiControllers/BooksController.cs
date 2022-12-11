@@ -26,7 +26,8 @@ namespace DashboardWebApp.ApiControllers
         public DataSourceResult GetBooks([FromBody] DataSourceRequest requestModel)
         {
             var videoFilterViewModelSessionString = HttpContext.Session.GetString(nameof(VideoFilterViewModel));
-            var videoFilterViewModel = new VideoFilterViewModel();
+            var format = "yyyy-MM-dd";
+            var videoFilterViewModel = new VideoFilterViewModel() { DateUploadedFrom = DateTime.Parse(DateTime.UtcNow.AddMonths(-3).ToString(format)), DateUploadedTo = DateTime.UtcNow, DateTakenFrom = DateTime.Parse(DateTime.UtcNow.AddMonths(-3).ToString(format)), DateTakenTo = DateTime.UtcNow, VideoDurationFrom = 0, VideoDurationTo = 0, FileSizeFrom = 0, FileSizeTo = 0 };
 
             if (!string.IsNullOrEmpty(videoFilterViewModelSessionString))
             {
@@ -68,7 +69,6 @@ namespace DashboardWebApp.ApiControllers
 
                 books = books.Where(x => selectedTakenByUsers.Contains(x.UserId)).ToList();
             }
-
 
             if (videoFilterViewModel.SelectedBookTypes != null && videoFilterViewModel.SelectedBookTypes.Length > 0)
             {

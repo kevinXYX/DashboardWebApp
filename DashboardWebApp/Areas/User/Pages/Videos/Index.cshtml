@@ -40,7 +40,7 @@
     </div>
     <div class="mb-3 flex">
         <label for="dateTaken" class="form-label center-self">Date uploaded</label>
-        <input type="date" class="ml-3" value="@fromDateDefault" asp-for="Input.DateUploadedFrom" id="dateUploadedFrom">
+        <input type="date" class="ml-3" value="@fromDateDefault3Months" asp-for="Input.DateUploadedFrom" id="dateUploadedFrom">
         <span class="ml-3 mr-3">To</span>
         <input type="date" asp-for="Input.DateUploadedTo" value="@toDateDefault" id="dateUploadedTo">
     </div>
@@ -138,7 +138,6 @@
                         }
                     },
                     error: function(e) {
-                        debugger
                         console.log(e.errors);
                         e.sender.cancelChanges();
                     },
@@ -165,6 +164,7 @@
                     pageSizes: true,
                     buttonCount: 5
                 },
+                noRecords: true,
                 columns: [{
                     field: "bookId",
                     title: "No",
@@ -268,7 +268,7 @@
         });
 
         $('body').click(function(e) {
-            if ($(e.target).hasClass('multiselect') == false && $(e.target).hasClass('multiselect-selected-text') == false) {
+            if ($(e.target).hasClass('multiselect') == false && $(e.target).hasClass('multiselect-selected-text') == false && $(e.target).hasClass('dropdown-toggle') == false && $(e.target).hasClass('user-dropdown-name') == false && $(e.target).hasClass('img-profile') == false) {
                 $('.dropdown-menu').hide();
             }
         });
