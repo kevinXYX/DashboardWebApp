@@ -38,6 +38,12 @@ namespace DashboardWebApp.ApiControllers
             var organization = this.userService.GetCurrentUserOrganization();
             var usersWithinOrganization = context.Users.Where(x => x.OrganizationId == organization.OrganizationId);
             var userIds = usersWithinOrganization.Select(x => x.UserId).ToList();
+
+            if (userService.IsUserSuperAdmin())
+            {
+                userIds = context.Users.Select(x => x.UserId).ToList();
+            }
+
             var bookVideoLabels = context.BookVideoLabels.Where(x => userIds.Contains(x.UserId)).ToList();
             var bookTypes = context.BookTypes.ToList();
             var bookVideoComments = context.BookVideoComments.Where(x => userIds.Contains(x.UserId)).ToList();
