@@ -21,6 +21,10 @@
     .w-5 {
         width: 5% !important;
     }
+
+    #noteModal .modal-content {
+        margin-top: 50%;
+    }
 </style>
 <link href="~/css/multiselect/bootstrap-multiselect.min.css" rel="stylesheet" type="text/css" />
 <div class="text-left">
@@ -104,6 +108,22 @@
     </div>
 </form>
 <div id="videos-grid"></div>
+<div id="noteModal" class="modal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Note</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="noteContent"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 @section Scripts {
     <script src="~/js/kendo/jquery.min.js"></script>
     <script src="~/js/kendo/jszip.min.js"></script>
@@ -112,6 +132,7 @@
         <div style="display: flex; flex-direction: column">
             <a type="button" class="btn btn-primary">Play video</a>
             <a style="margin-top: 10px;" type="button" class="btn btn-secondary">Add a label</a>
+             #if(note) {#<a onclick="showModal('#=note#')" style="margin-top: 10px;" type="button" class="btn btn-secondary">View note</a>#}#
         </div>
     </script>
     <script src="~/js/multiselect/bootstrap-multiselect.min.js" type="text/javascript"></script>
@@ -310,5 +331,11 @@
                 }
             })
         });
+
+        function showModal(note) {
+            var noteModal = new bootstrap.Modal(document.getElementById('noteModal'))
+            $('#noteModal #noteContent').html(note);
+            noteModal.show();
+        }
     </script>
 }

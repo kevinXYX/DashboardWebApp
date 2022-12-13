@@ -8,13 +8,6 @@ namespace DashboardWebApp.Attributes
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
     public class AdminAuthorizeAttribute : AuthorizeAttribute, IAuthorizationFilter
     {
-        private readonly bool _isSuperAdmin;
-
-        public AdminAuthorizeAttribute(bool isSuperAdmin)
-        {
-            _isSuperAdmin = isSuperAdmin;
-        }
-
         public void OnAuthorization(AuthorizationFilterContext context)
         {
             var user = context.HttpContext.User;
@@ -31,7 +24,7 @@ namespace DashboardWebApp.Attributes
             // you can also use registered services
             var userService = context.HttpContext.RequestServices.GetService<IUserService>();
 
-            var isAuthorized = !_isSuperAdmin ? userService.IsUserAdmin() : userService.IsUserSuperAdmin();
+            var isAuthorized = userService.IsUserAdmin() || userService.IsUserSuperAdmin();
 
             if (!isAuthorized)
             {

@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DashboardWebApp.ApiControllers
 {
+    [AdminAuthorize]
     public class AdminController : ControllerBase
     {
         private readonly IDbFactory dBFactory;
@@ -20,7 +21,6 @@ namespace DashboardWebApp.ApiControllers
             this.userService = userService;
         }
 
-        [AdminAuthorize(isSuperAdmin: false)]
         [HttpPost]
         [Route("api/admin/users")]
         public DataSourceResult GetUsers([FromBody] DataSourceRequest requestModel)
@@ -38,7 +38,6 @@ namespace DashboardWebApp.ApiControllers
             return result;
         }
 
-        [AdminAuthorize(isSuperAdmin: true)]
         [HttpPost]
         [Route("api/admin/organizations")]
         public DataSourceResult GetOrganizations([FromBody] DataSourceRequest requestModel)
@@ -48,7 +47,6 @@ namespace DashboardWebApp.ApiControllers
             return organizations;
         }
 
-        [AdminAuthorize(isSuperAdmin: true)]
         [HttpPost]
         [Route("api/admin/userpolicies")]
         public DataSourceResult GetUserPolicies([FromBody] DataSourceRequest requestModel)
