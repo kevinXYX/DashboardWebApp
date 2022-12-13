@@ -25,12 +25,16 @@
     #noteModal .modal-content {
         margin-top: 50%;
     }
+
+    #userNote {
+        display: none;
+    }
 </style>
 <link href="~/css/multiselect/bootstrap-multiselect.min.css" rel="stylesheet" type="text/css" />
 <div class="text-left">
     <h3 class="display-">Videos</h3>
 </div>
-<br/>
+<br />
 <form id="filterForm" method="post">
     <div class="mb-3 flex">
         <label for="name" class="form-label center-self">ISBN</label>
@@ -60,6 +64,11 @@
     </div>
     <div class="mb-3 flex">
         <label for="name" class="form-label center-self">User note</label>
+        <select id="user-note-selection" class="form-control ml-2" style="width:10%;">
+            <option value="unselected">Unselected</option>
+            <option value="notempty">Not Empty</option>
+            <option value="contains">Contains</option>
+        </select>
         <input asp-for="Input.UserNote" type="text" class="form-control w-25 ml-3" id="userNote" placeholder="contains">
     </div>
     <div class="mb-3">
@@ -109,20 +118,20 @@
 </form>
 <div id="videos-grid"></div>
 <div id="noteModal" class="modal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Note</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p id="noteContent"></p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Note</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="noteContent"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 @section Scripts {
     <script src="~/js/kendo/jquery.min.js"></script>
@@ -309,7 +318,8 @@
                 videoDurationTo: $('#videoDurationTo').val(),
                 fileSizeFrom: $('#fileSizeFrom').val(),
                 fileSizeTo: $('#fileSizeTo').val(),
-                selectedHasComments: hasCommentsDropDownSelected
+                selectedHasComments: hasCommentsDropDownSelected,
+                showWithUserNotesOnly: $('#user-note-selection').val() === 'notempty'
             };
 
             $.ajax({
@@ -337,5 +347,19 @@
             $('#noteModal #noteContent').html(note);
             noteModal.show();
         }
+
+        $('#user-note-selection').on('change', function() {
+            var value = $(this).val();
+
+            if (value === "contains") {
+                $('#userNote').show();
+            } else {
+                $('#userNote').hide();
+            }
+
+            if (value === 'unselected' || value === 'notempty') {
+                $('#userNote').val(null);
+            }
+        });
     </script>
 }

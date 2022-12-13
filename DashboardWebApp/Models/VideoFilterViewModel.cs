@@ -19,5 +19,6 @@ namespace DashboardWebApp.Models
         public int? FileSizeFrom { get; set; }
         public int? FileSizeTo { get; set; }
         public string[]? SelectedHasComments { get; set; } = new string[0];
+        public bool? ShowWithUserNotesOnly { get; set; }
     }
 }

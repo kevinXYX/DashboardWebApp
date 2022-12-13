@@ -120,6 +120,11 @@ namespace DashboardWebApp.ApiControllers
                 }
             }
 
+            if (videoFilterViewModel.ShowWithUserNotesOnly.HasValue && videoFilterViewModel.ShowWithUserNotesOnly.Value)
+            {
+                books = books.Where(x => !string.IsNullOrEmpty(x.Note)).ToList();
+            }
+
             var booksViewModel = new List<BooksViewModel>();
 
             books = books.GroupBy(x => x.Id).Select(x => x.FirstOrDefault()).ToList();
