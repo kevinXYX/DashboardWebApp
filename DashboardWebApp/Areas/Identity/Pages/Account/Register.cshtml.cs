@@ -117,7 +117,7 @@ namespace DashboardWebApp.Areas.Identity.Pages.Account
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-                user.User = new User { LogoFileName = String.Empty, UserName = user.UserName, Password = String.Empty };
+                user.User = new Data.User { LogoFileName = String.Empty, UserName = user.UserName, Password = String.Empty };
 
                 var result = await _userManager.CreateAsync(user, Input.Password);
 

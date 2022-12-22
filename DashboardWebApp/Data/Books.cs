@@ -6,6 +6,7 @@
         {
             BookVideoLabels = new HashSet<BookVideoLabels>();
             BookVideoComments = new HashSet<BookVideoComments>();
+            BookVideoHistory = new HashSet<BookVideoHistory>(); 
         }
 
         public int Id { get; set; }
@@ -26,5 +27,6 @@
         public virtual User User { get; set; }
         public virtual ICollection<BookVideoLabels>? BookVideoLabels { get; set; }
         public virtual ICollection<BookVideoComments>? BookVideoComments { get; set; }
+        public virtual ICollection<BookVideoHistory>? BookVideoHistory { get; set; }
     }
 }

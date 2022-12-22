@@ -46,6 +46,7 @@ namespace DashboardWebApp.ApiControllers
 
             var bookVideoLabels = context.BookVideoLabels.Where(x => userIds.Contains(x.UserId)).ToList();
             var bookTypes = context.BookTypes.ToList();
+            var bookVideos = context.BookVideos.ToList();
             var bookVideoComments = context.BookVideoComments.Where(x => userIds.Contains(x.UserId)).ToList();
 
             var sqlParams = new SqlParameter[] {
@@ -133,12 +134,13 @@ namespace DashboardWebApp.ApiControllers
             {
                 var user = usersWithinOrganization?.SingleOrDefault(b => b.UserId == x.UserId)?.Fullname ?? usersWithinOrganization?.SingleOrDefault(b => b.UserId == x.UserId)?.UserName;
                 var bookType = bookTypes.SingleOrDefault(b => b.Id == x.TypeId.GetValueOrDefault())?.Name;
-
+                var bookVideo = bookVideos.SingleOrDefault(b => b.FileName == x.FileName && b.UserId == x.UserId);
                 booksViewModel.Add(new BooksViewModel
                 {
                     Id = x.Id,
                     BookId = x.BookId,
                     Isbn = x.Isbn,
+                    VideoUrl = bookVideo?.VideoUri ?? string.Empty,
                     Labels = string.Join(",", bookVideoLabels.Where(b => b.BookId == x.Id).Select(x => x.Label)),
                     User = user,
                     BookType = bookType,
@@ -173,6 +175,7 @@ namespace DashboardWebApp.ApiControllers
 
     public class BooksViewModel : Books
     {
+        public string VideoUrl { get; set; }
         public string Labels { get; set; }
         public string User { get; set; }
         public string BookType { get; set; }

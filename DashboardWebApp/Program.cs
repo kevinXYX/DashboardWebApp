@@ -23,6 +23,7 @@ builder.Services.AddTransient<ClaimsPrincipal>(s =>
     s.GetService<IHttpContextAccessor>().HttpContext.User);
 builder.Services.AddScoped<IDbFactory, DbFactory>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IVideoService, VideoService>();
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 builder.Services.AddSession(options =>
 {

@@ -21,6 +21,7 @@ namespace DashboardWebApp.Data
         public DbSet<BookVideoComments> BookVideoComments { get; set; }
         public DbSet<BookTypes> BookTypes { get; set; }
         public DbSet<BookVideoLabels> BookVideoLabels { get; set; }
+        public DbSet<BookVideoHistory> BookVideoHistory { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -135,6 +136,16 @@ namespace DashboardWebApp.Data
                     .WithMany(d => d.BookVideoLabels)
                     .HasForeignKey(d => d.BookId)
                     .HasConstraintName("FK_BookVideoLabels_BookId");
+            });
+
+            builder.Entity<BookVideoHistory>(entity =>
+            {
+                entity.ToTable("BookVideoHistory");
+
+                entity.HasOne(d => d.Book)
+                    .WithMany(d => d.BookVideoHistory)
+                    .HasForeignKey(d => d.BookId)
+                    .HasConstraintName("FK_BookVideoHistory_BookId");
             });
         }
     }

@@ -115,7 +115,7 @@ namespace DashboardWebApp.Areas.Admin.Views.UserManagement
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-                user.User = new User { LogoFileName = String.Empty, UserName = user.UserName, Password = String.Empty, Fullname = Input.Name, IsAdmin = Input.IsAdmin, OrganizationId = Input.OrganizationId, UserStatus = 0, CreatedDate = DateTime.UtcNow };
+                user.User = new Data.User { LogoFileName = String.Empty, UserName = user.UserName, Password = String.Empty, Fullname = Input.Name, IsAdmin = Input.IsAdmin, OrganizationId = Input.OrganizationId, UserStatus = 0, CreatedDate = DateTime.UtcNow };
 
                 var result = await _userManager.CreateAsync(user, "P" + Guid.NewGuid().ToString()); //set default password to be changed later by the user
 
