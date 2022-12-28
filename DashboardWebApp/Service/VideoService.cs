@@ -156,5 +156,40 @@ namespace DashboardWebApp.Service
 
             return bookVideoLabels;
         }
+
+        public int GetTotalCommentsCount(int bookId)
+        {
+            if (bookId <= 0)
+                return 0;
+
+            var bookVideoComments = context.BookVideoComments.Where(x => x.BookId == bookId).OrderByDescending(x => x.Created);
+            return bookVideoComments.Count();
+        }
+
+        public List<string> GetTagsSuggestion(int bookId)
+        {
+            var userOrganization = this.userService.GetCurrentUserOrganization();
+
+            var usersInThisOrganization = context.Users
+                .Where(x => x.OrganizationId == userOrganization.OrganizationId)
+                .Select(x => x.UserId)
+                .ToList();
+
+            var booksBelongToUsers = context.Books.Where(x => usersInThisOrganization.Contains(x.UserId)).ToList();
+
+            if (userService.IsUserSuperAdmin())
+            {
+                booksBelongToUsers = context.Books.ToList();
+            }
+
+            var bookIds = booksBelongToUsers.Select(x => x.Id).ToList();
+
+            var bookVideoLabels = context.BookVideoLabels.Where(x => bookIds.Contains(x.BookId)).OrderByDescending(x => x.Created).Take(10);
+
+            if (bookVideoLabels == null || bookVideoLabels.Count() == 0)
+                return null;
+
+            return bookVideoLabels.Select(x => x.Label).ToList();
+        }
     }
 }

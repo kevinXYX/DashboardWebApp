@@ -127,7 +127,7 @@
     </div>
 </form>
 <div id="videos-grid"></div>
-<div id="noteModal" class="modal" tabindex="-1">
+<div id="noteModal" class="modal" tabindex="-1" data-keyboard="false" data-backdrop="static">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -155,7 +155,7 @@
             </div>
             <div class="modal-footer">
                 <button onclick="addLabel()" type="button" class="btn btn-success">Add</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button id="closeAddLabelModal" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -166,7 +166,7 @@
     <script src="~/js/kendo/kendo.all.min.js"></script>
     <script id="action-template" type="text/x-kendo-template">
         <div style="display: flex; flex-direction: column">
-            #if(videoUrl) {#<a href="/User/Videos/PlayVideo?bookId=#: id #" type="button" class="btn btn-primary">Play Video</a>#}#
+            <a href="/User/Videos/PlayVideo?bookId=#: id #" type="button" class="btn btn-primary">Play Video</a>
             <a onclick="showAddLabelModal('#=id#')" style="margin-top: 10px;" type="button" class="btn btn-secondary">Add a label</a>
             #if(note) {#<a onclick="showModal('#=note#')" style="margin-top: 10px;" type="button" class="btn btn-secondary">View note</a>#}#
         </div>
@@ -300,18 +300,20 @@
                 success: function(data) {
                     if (data) {
                         $('#addLabelContent').val(null)
-                        $('.modal-backdrop').remove();
-                        $('#addLabelModal').hide();
+                        //$('.modal-backdrop').remove();
+                        //$('#addLabelModal').hide();
+                        $("#videos-grid").data("kendoGrid").dataSource.read();
+                        setTimeout(() => $('#closeAddLabelModal').click());
                     }
                 }
             })
         }
 
-        $('body').on('click', function() {
-            if ($('.modal-backdrop').length > 0 && $('#addLabelModal').css('display') === 'none') {
-                $('.modal-backdrop').remove();
-            }
-        });
+        //$('body').on('click', function() {
+        //    if ($('.modal-backdrop').length > 0 && $('#addLabelModal').css('display') === 'none') {
+        //        $('.modal-backdrop').remove();
+        //    }
+        //});
 
         $('#takenByDropDown, #bookTypeDropDown, #labelsDropDown, #hasCommentsDropDown').multiselect({
             includeSelectAllOption: true,

@@ -11,5 +11,7 @@ namespace DashboardWebApp.Service
         List<VideoLabelsViewModel> GetVideoLabels(int bookId);
         BookVideoComments AddVideoComment(int bookId, string comment);
         BookVideoLabels AddVideoLabel(int bookId, string label);
+        int GetTotalCommentsCount(int bookId);
+        List<string> GetTagsSuggestion(int bookId);
     }
 }

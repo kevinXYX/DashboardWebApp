@@ -91,6 +91,29 @@
     #addLabelModal .modal-content {
         margin-top: 50%;
     }
+
+    #totalCommentsCount {
+        margin-left: 10px;
+        background: red;
+        padding: 1px 8px;
+        border-radius: 10px;
+        color: white;
+    }
+    .overlay-desc {
+      background: rgba(0,0,0,0);
+      position: absolute;
+      top: 0; right: 0; bottom: 0; left: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .overlay-desc h1 {
+        color: white;
+    }
+    #addLabelModalBody .ui-autocomplete  {
+        margin-top: 54px;
+        margin-left: 16px;
+    }
 </style>
 <div class="video-container">
     <div class="video">
@@ -106,8 +129,23 @@
                 <span><a onclick="showAddLabelModal()" id="add-label" href="#">+ add label</a></span>
             </div>
         </div>
-        <video controls src="/api/videos/getstream?url=@Model.BookDetailsViewModel.BookVideoUrl"></video>
-        <a href="@Model.BookDetailsViewModel.BookVideoUrl">Download video</a>
+        <div style="position: relative;">
+            @if (string.IsNullOrEmpty(Model.BookDetailsViewModel.BookVideoUrl))
+            {
+                <video controls></video>
+                <div class="overlay-desc">
+                    <h1>No video uploaded yet</h1>
+                </div>
+            }
+            else
+            {
+                <video controls src="/api/videos/getstream?url=@Model.BookDetailsViewModel.BookVideoUrl"></video>
+            }
+        </div>
+        @if (!string.IsNullOrEmpty(Model.BookDetailsViewModel.BookVideoUrl))
+        {
+            <a href="@Model.BookDetailsViewModel.BookVideoUrl">Download video</a>
+        }
     </div>
     <div class="video-details">
         <ul class="nav nav-tabs" id="videoDetailsTab" role="tablist">
@@ -117,8 +155,8 @@
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">History</button>
             </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments" type="button" role="tab" aria-controls="comments" aria-selected="false">Comments</button>
+            <li class="nav-item" role="presentation" style="display: flex; align-items: center;">
+                <button class="nav-link" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments" type="button" role="tab" aria-controls="comments" aria-selected="false">Comments</button><span id="totalCommentsCount">@Model.TotalCommentsCount</spanid>
             </li>
         </ul>
         <div class="tab-content" id="videoDetailsTabContent">
@@ -172,168 +210,183 @@
                             @Model.BookDetailsViewModel.VideoFileSize
                         </div>
                     </div>
-                    <div cl
                     <div class="row">
                         <div class="col">
                             User note:
                         </div>
                         <div class="col">
-                                @Model.BookDetailsViewModel.UserNote
+                            @Model.BookDetailsViewModel.UserNote
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
+                <div class="history-container">
+                    @foreach (var history in Model.VideoHistoryViewModel)
+                    {
+                        <div class="history">
+                            <span class="history-date">@history.HistoryDate</span>
+                            <span class="history-title">@history.History</span>
+                            <span class="history-content"></span>
+                        </div>
+                    }
                 </div>
-                <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
-                    <div class="history-container">
-                        @foreach (var history in Model.VideoHistoryViewModel)
-                        {
-                            <div class="history">
-                                <span class="history-date">@history.HistoryDate</span>
-                                <span class="history-title">@history.History</span>
-                                <span class="history-content"></span>
-                            </div>
-                        }
-                    </div>
+            </div>
+            <div class="tab-pane fade" id="comments" role="tabpanel" aria-labelledby="comments-tab">
+                <div class="comments-container">
+                    @foreach (var comment in Model.VideoCommentsViewModel)
+                    {
+                        <div class="comments">
+                            <span class="comments-date">@comment.CommentDate</span>
+                            <span class="comments-title">@comment.CommentByUser added a new comment</span>
+                            <span class="comments-content">@comment.Comment</span>
+                        </div>
+                    }
                 </div>
-                <div class="tab-pane fade" id="comments" role="tabpanel" aria-labelledby="comments-tab">
-                    <div class="comments-container">
-                        @foreach (var comment in Model.VideoCommentsViewModel)
-                        {
-                            <div class="comments">
-                                <span class="comments-date">@comment.CommentDate</span>
-                                <span class="comments-title">@comment.CommentByUser added a new comment</span>
-                                <span class="comments-content">@comment.Comment</span>
-                            </div>
-                        }
-                    </div>
 
-                    <div class="comment-box">
-                        <span>Add a new comment as @Model.User.Identity.Name</span>
-                        <textarea id="user-comment" cols="5" rows="5" maxlength="200"></textarea>
-                        <button onclick="addComment()" class="btn btn-primary w-50">Add comment</button>
-                    </div>
+                <div class="comment-box">
+                    <span>Add a new comment as @Model.User.Identity.Name</span>
+                    <textarea id="user-comment" cols="5" rows="5" maxlength="200"></textarea>
+                    <button onclick="addComment()" class="btn btn-primary w-50">Add comment</button>
                 </div>
             </div>
         </div>
     </div>
-    <div id="addLabelModal" class="modal" tabindex="-1" data-keyboard="false" data-backdrop="static">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add Label</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input id="addLabelContent" class="form-control" maxlength="10">
-                </div>
-                <div class="modal-footer">
-                    <button onclick="addLabel()" type="button" class="btn btn-success">Add</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
+</div>
+<div id="addLabelModal" class="modal" tabindex="-1" data-keyboard="false" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Label</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="addLabelModalBody">
+                <input id="addLabelContent" class="form-control" maxlength="10">
+            </div>
+            <div class="modal-footer">
+                <button onclick="addLabel()" type="button" class="btn btn-success">Add</button>
+                <button id="addLabelModalClose" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
-    @section Scripts {
-        <script>
+</div>
+
+@section Scripts {
+    <script>
+        var tagsSuggestion = [];
+
+        @foreach (var tags in Model.TagsSuggestion)
+        {
+            @:tagsSuggestion.push('@tags')
+        }
+
             function showAddLabelModal() {
                 var addLabelModal = new bootstrap.Modal(document.getElementById('addLabelModal'))
                 $('#addLabelContent').css('border', '1px solid #ced4da');
                 addLabelModal.show();
+
+                $("#addLabelContent").autocomplete({
+                    source: tagsSuggestion,
+                    appendTo: "#addLabelModalBody"
+                });
             }
 
-            var bookId = '@Model.BookDetailsViewModel.BookId'
+        var bookId = '@Model.BookDetailsViewModel.BookId'
 
-            var postModel = {
-                bookId: bookId,
-                content: $('#addLabelContent').val()
-            };
+        var postModel = {
+            bookId: bookId,
+            content: $('#addLabelContent').val()
+        };
 
-            function addLabel() {
-                postModel.content = $('#addLabelContent').val();
+        function addLabel() {
+            postModel.content = $('#addLabelContent').val();
 
-                if (!postModel.content) {
-                    $('#addLabelContent').css('border', '1px solid red');
-                    return;
-                }
-
-                $.ajax({
-                    url: '/api/videos/addvideolabel',
-                    type: 'POST',
-                    data: postModel,
-                    success: function(data) {
-                        if (data) {
-                            var labelsLength = $('.label').length;
-
-                            $('.video-labels').prepend(`<span class="label">${data.label}</span>`);
-
-                            //var addLabelModal = new bootstrap.Modal(document.getElementById('addLabelModal'))
-                            $('#addLabelContent').val(null)
-                            //addLabelModal.hide();
-                            $('.modal-backdrop').remove();
-                            $('#addLabelModal').hide();
-
-                            if (labelsLength > 6) {
-                                $('.video-labels .label').last().remove();
-                            }
-
-                            addHistory(data.displayDate, `added a new label ${data.label}`);
-                        }
-                    }
-                })
+            if (!postModel.content) {
+                $('#addLabelContent').css('border', '1px solid red');
+                return;
             }
 
-            function addComment() {
-                postModel.content = $('#user-comment').val();
+            $.ajax({
+                url: '/api/videos/addvideolabel',
+                type: 'POST',
+                data: postModel,
+                success: function(data) {
+                    if (data) {
+                        var labelsLength = $('.label').length;
 
-                if (!postModel.content) {
-                    $('#user-comment').css('border', '1px solid red');
-                    return;
-                }
+                        $('.video-labels').prepend(`<span class="label">${data.label}</span>`);
 
-                $.ajax({
-                    url: '/api/videos/addvideocomment',
-                    type: 'POST',
-                    data: postModel,
-                    success: function(data) {
-                        if (data) {
-                            $('#user-comment').val(null);
-                            var commentsLength = $('.comments').length;
+                        $('#addLabelContent').val(null)
+                        $('#addLabelModalClose').click();
 
-                            $('.comments-container').prepend(`<div class="comments">
-                                                                    <span class="comments-date">${data.displayDate}</span>
-                                                                    <span class="comments-title">${data.userName} added a new comment</span>
-                                                                    <span class="comments-content">${data.comment}</span>
-                                                                    </div>`)
-
-                            if (commentsLength > 6) {
-                                $('.comments-container .comments').last().remove();
-                            }
-
-                            addHistory(data.displayDate, `added a new comment ${data.comment}`);
+                        if (labelsLength > 6) {
+                            $('.video-labels .label').last().remove();
                         }
 
+                        addHistory(data.displayDate, `added a new label ${data.label}`);
                     }
-                })
+                }
+            })
+        }
+
+        function addComment() {
+            postModel.content = $('#user-comment').val();
+
+            if (!postModel.content) {
+                $('#user-comment').css('border', '1px solid red');
+                return;
             }
 
-            function addHistory(date, history) {
-                var userName = '@Model.User.Identity.Name'
+            $.ajax({
+                url: '/api/videos/addvideocomment',
+                type: 'POST',
+                data: postModel,
+                success: function(data) {
+                    if (data) {
+                        $('#user-comment').val(null);
+                        var commentsLength = $('.comments').length;
 
-                $('.history-container').prepend(`<div class="history">
-                                            <span class="history-date">${date}</span>
-                                            <span class="history-title">${userName} ${history}</span>
-                                            <span class="history-content"></span>
-                                        </div>`);
+                        $('.comments-container').prepend(`<div class="comments">
+                                                                                                                                                                        <span class="comments-date">${data.displayDate}</span>
+                                                                                                                                                                        <span class="comments-title">${data.userName} added a new comment</span>
+                                                                                                                                                                        <span class="comments-content">${data.comment}</span>
+                                                                                                                                                                        </div>`)
 
-                if ($('.history').length > 6) {
-                    $('.history-container .history').last().remove();
+                        if (commentsLength > 6) {
+                            $('.comments-container .comments').last().remove();
+                        }
+
+                        addHistory(data.displayDate, `added a new comment ${data.comment}`);
+
+                        var currentCommentCount = $('#totalCommentsCount').html();
+                        if (currentCommentCount) {
+                            currentCommentCount = parseInt(currentCommentCount) + 1;
+                            $('#totalCommentsCount').html(currentCommentCount);
+                        }
+                    }
+
                 }
+            })
+        }
+
+        function addHistory(date, history) {
+            var userName = '@Model.User.Identity.Name'
+
+            $('.history-container').prepend(`<div class="history">
+                                                                                                                                                <span class="history-date">${date}</span>
+                                                                                                                                                <span class="history-title">${userName} ${history}</span>
+                                                                                                                                                <span class="history-content"></span>
+                                                                                                                                            </div>`);
+
+            if ($('.history').length > 6) {
+                $('.history-container .history').last().remove();
             }
+        }
 
-            $('body').on('click', function() {
-                if ($('.modal-backdrop').length > 0 && $('#addLabelModal').css('display') === 'none') {
-                    $('.modal-backdrop').remove();
-                }
-            });
-        </script>
+        $('body').on('click', function() {
+            if ($('.modal-backdrop').length > 0 && $('#addLabelModal').css('display') === 'none') {
+                $('.modal-backdrop').remove();
+            }
+        });
+    </script>
     }
