@@ -35,7 +35,7 @@ namespace DashboardWebApp.Service
                 DateTaken = book.Created.ToString("dd MMM yyyy hh:mm tt"),
                 UserNote = book.Note,
                 BookType = bookTypes.SingleOrDefault(b => b.Id == book.TypeId).Name ?? string.Empty,
-                CreatedBy = book.User.UserName
+                CreatedBy = $"{book.User.Fullname} {book.User.UserName}"
             };
 
             return bookDetailsViewModel;
