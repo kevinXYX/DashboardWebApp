@@ -52,10 +52,16 @@ namespace DashboardWebApp.ApiControllers
         }
 
         [HttpPost("api/videos/addvideolabel")]
-        public IActionResult AddVideoLabel(VideoPostContent videoPostContent)
+        public IActionResult AddVideoLabel(VideoLabelContent videoPostContent)
         {
-            return Ok(this.videoService.AddVideoLabel(videoPostContent.BookId, videoPostContent.Content));
+            return Ok(this.videoService.AddVideoLabel(videoPostContent.BookId, videoPostContent.LabelId));
         }
+    }
+
+    public class VideoLabelContent
+    {
+        public int BookId { get; set; }
+        public int LabelId { get; set; }
     }
 
     public class VideoPostContent

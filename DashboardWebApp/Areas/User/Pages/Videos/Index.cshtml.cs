@@ -6,44 +6,65 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace DashboardWebApp.Areas.UserArea.Pages.Videos
 {
     public class IndexModel : PageModel
     {
-        private readonly IDbFactory _dbFactory;
+        private readonly IVideoService videoService;
         private readonly IUserService _userService;
 
-        public IndexModel(IDbFactory dbFactory, IUserService userService)
+        public IndexModel(IUserService userService, IVideoService videoService)
         {
-            _dbFactory = dbFactory;
             _userService = userService;
-            Input = new VideoFilterViewModel();
+            this.videoService = videoService;
         }
 
         [BindProperty]
-        public VideoFilterViewModel Input { get; set; }
+        public VideoFilterViewModel Input { get; set; } = new VideoFilterViewModel();
 
         [BindProperty]
-        public List<SelectListItem> TakenByUserDropDown { get; set; }
+        public List<SelectListItem> TakenByUserDropDown { get; set; } = new List<SelectListItem>();
 
         [BindProperty]
-        public List<SelectListItem> BookTypeDropDown { get; set; }
+        public List<SelectListItem> BookTypeDropDown { get; set; } = new List<SelectListItem>();
 
         [BindProperty]
-        public List<SelectListItem> BookVideoLabels { get; set; }
+        public List<SelectListItem> BookVideoLabels { get; set; } = new List<SelectListItem>();
 
         public IActionResult OnGet()
         {
-            var context = _dbFactory.GetDatabaseContext();
-            var userCurrentOrganization = _userService.GetCurrentUserOrganization();
-            var userIds = context.Users.Where(x => x.OrganizationId == userCurrentOrganization.OrganizationId).Select(x => x.UserId);
-            var booksTakenByUsers = context.Books.Include(x => x.User).Where(x => userIds.Contains(x.UserId)).GroupBy(x => x.UserId).Select(x => new SelectListItem { Value = x.FirstOrDefault().UserId.ToString(), Text = x.FirstOrDefault().User.UserName }).ToList();
-            var bookTypes = context.BookTypes.Select(x => new SelectListItem { Value = x.Id.ToString(), Text = x.Name }).ToList();
-            var bookLabels = context.BookVideoLabels.Where(x => userIds.Contains(x.UserId)).Select(x => new SelectListItem { Value = x.Id.ToString(), Text = x.Label }).ToList();
-            TakenByUserDropDown = booksTakenByUsers;
-            BookTypeDropDown = bookTypes;
-            BookVideoLabels = bookLabels;
+            var currentUser = _userService.GetCurrentUser();
+
+            var filtersDict = this.videoService.GetFilterDropDowns(currentUser.UserId, currentUser.OrganizationId);
+
+            foreach (DataRow dataRow in filtersDict["TakenByUserDropDown"].Rows)
+            {
+                TakenByUserDropDown.Add(new SelectListItem
+                {
+                    Value = dataRow["UserID"].ToString(),
+                    Text = dataRow["UserName"].ToString()
+                });
+            }
+
+            foreach (DataRow dataRow in filtersDict["BookTypeDropDown"].Rows)
+            {
+                BookTypeDropDown.Add(new SelectListItem
+                {
+                    Value = dataRow["BookTypeID"].ToString(),
+                    Text = dataRow["BookTypeName"].ToString()
+                });
+            }
+
+            foreach (DataRow dataRow in filtersDict["BookVideoLabels"].Rows)
+            {
+                BookVideoLabels.Add(new SelectListItem
+                {
+                    Value = dataRow["LabelID"].ToString(),
+                    Text = dataRow["LabelName"].ToString()
+                });
+            }
 
             return Page();
         }

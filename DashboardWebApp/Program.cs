@@ -24,6 +24,7 @@ builder.Services.AddTransient<ClaimsPrincipal>(s =>
 builder.Services.AddScoped<IDbFactory, DbFactory>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IVideoService, VideoService>();
+builder.Services.AddScoped<IDataAccessLayer, DataAccessLayer>();
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 builder.Services.AddSession(options =>
 {

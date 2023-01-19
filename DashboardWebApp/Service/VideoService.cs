@@ -1,6 +1,7 @@
 ﻿using DashboardWebApp.Data;
 using DashboardWebApp.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace DashboardWebApp.Service
 {
@@ -8,79 +9,70 @@ namespace DashboardWebApp.Service
     {
         private readonly ApplicationDbContext context;
         private readonly IUserService userService;
-        public VideoService(IDbFactory dbFactory, IUserService userService)
+        private readonly IDataAccessLayer dataAccessLayer;
+        public VideoService(IDbFactory dbFactory, IUserService userService, IDataAccessLayer dataAccessLayer)
         {
             context = dbFactory.GetDatabaseContext();
             this.userService = userService;
+            this.dataAccessLayer = dataAccessLayer;
         }
 
-        public BookDetailsViewModel GetBookDetails(int bookId)
+        public Dictionary<string, DataTable> GetBookDetails(int bookId)
         {
-            var bookTypes = context.BookTypes.ToList();
-            var book = context.Books.Include(x => x.User).SingleOrDefault(x => x.Id == bookId);
+            var dataSetDict = new Dictionary<string, DataTable>();
 
-            if (book == null)
-                return new BookDetailsViewModel();
+            var videoDetailsDataSet = this.dataAccessLayer.GetDataSet("GetVideoToPlay", false, new object[] { 0, bookId });
 
-            var bookVideo = context.BookVideos.SingleOrDefault(x => x.FileName == book.FileName && x.UserId == book.UserId);
-
-            var bookDetailsViewModel = new BookDetailsViewModel()
+            if (videoDetailsDataSet != null)
             {
-                BookId = book.Id,
-                FileName = book.FileName,
-                BookVideoUrl = bookVideo?.VideoUri ?? string.Empty,
-                VideoDuration = book.VideoDuration > 60 ? $"{book.VideoDuration / 60} minute(s)" : $"< a minute",
-                VideoFileSize = book.FileSize > 1000 ? $"{(book.FileSize / 1000)} MB" : $"< 1 MB",
-                DateUploaded = book.UploadDate.GetValueOrDefault().ToString("dd MMM yyyy hh:mm tt"),
-                DateTaken = book.Created.ToString("dd MMM yyyy hh:mm tt"),
-                UserNote = book.Note,
-                BookType = bookTypes.SingleOrDefault(b => b.Id == book.TypeId).Name ?? string.Empty,
-                CreatedBy = $"{book.User.Fullname} {book.User.UserName}"
-            };
+                var bookDetailsTable = videoDetailsDataSet.Tables[0];
+                dataSetDict.Add("BookDetails", bookDetailsTable);
 
-            return bookDetailsViewModel;
+                var commentsTable = videoDetailsDataSet.Tables[1];
+                dataSetDict.Add("Comments", commentsTable);
+
+                var labelsTable = videoDetailsDataSet.Tables[2];
+                dataSetDict.Add("Labels", labelsTable);
+
+                var historyTable = videoDetailsDataSet.Tables[3];
+                dataSetDict.Add("History", historyTable);
+
+                var totalCommentsCount = videoDetailsDataSet.Tables[4];
+                dataSetDict.Add("TotalComments", totalCommentsCount);
+            }
+
+            return dataSetDict;
         }
 
-        public List<VideoHistoryViewModel> GetVideoHistory(int bookId)
+        public Dictionary<string, DataTable> GetFilterDropDowns(int userId, int organizationId)
         {
-            var bookVideoHistory = context.BookVideoHistory.Where(x => x.BookId == bookId).OrderByDescending(x => x.Created).Take(7);
+            var dataSetDict = new Dictionary<string, DataTable>();
 
-            if (bookVideoHistory == null || bookVideoHistory.Count() == 0)
-                return new List<VideoHistoryViewModel>();
+            var filterDropDownsDataSet = this.dataAccessLayer.GetDataSet("GetFiltersDropdowns", false, new object[] { 0, userId, organizationId });
 
-            return bookVideoHistory.Include(x => x.User).Select(x => new VideoHistoryViewModel
+            if (filterDropDownsDataSet != null)
             {
-                History = x.History,
-                HistoryDate = $"{x.Created.ToString("dd MMM yyyy")} at {x.Created.ToString("hh:mm tt")}"
-            }).ToList();
+                var filtersByUsername = filterDropDownsDataSet.Tables[0];
+                dataSetDict.Add("TakenByUserDropDown", filtersByUsername);
+
+                var filtersByBookType = filterDropDownsDataSet.Tables[1];
+                dataSetDict.Add("BookTypeDropDown", filtersByBookType);
+
+                var filtersByBookVideoLabels = filterDropDownsDataSet.Tables[2];
+                dataSetDict.Add("BookVideoLabels", filtersByBookVideoLabels);
+            }
+
+            return dataSetDict;
         }
 
-        public List<VideoCommentsViewModel> GetVideoComments(int bookId)
+        public DataSet GetUserLabelsDataSet(int bookId, int userId, int organizationId)
         {
-            var bookVideoComments = context.BookVideoComments.Where(x => x.BookId == bookId).OrderByDescending(x => x.Created).Take(7);
-
-            if (bookVideoComments == null || bookVideoComments.Count() == 0)
-                return new List<VideoCommentsViewModel>();
-
-            return bookVideoComments.Include(x => x.User).Select(x => new VideoCommentsViewModel
-            {
-                Comment = x.Comment,
-                CommentByUser = x.User.UserName,
-                CommentDate = $"{x.Created.ToString("dd MMM yyyy")} at {x.Created.ToString("hh:mm tt")}"
-            }).ToList();
+            return this.dataAccessLayer.GetDataSet("GetLabelsForUser", false, new object[] { 0, userId, organizationId, bookId });
         }
 
-        public List<VideoLabelsViewModel> GetVideoLabels(int bookId)
+        public DataSet GetAllLabelsForOrganizationDataSet(int userId, int organizationId)
         {
-            var bookVideoLabels = context.BookVideoLabels.Where(x => x.BookId == bookId).OrderByDescending(x => x.Created).Take(6);
-
-            if (bookVideoLabels == null || bookVideoLabels.Count() == 0)
-                return new List<VideoLabelsViewModel>();
-
-            return bookVideoLabels.Select(x => new VideoLabelsViewModel
-            {
-                Label = x.Label
-            }).ToList();
+            return this.dataAccessLayer.GetDataSet("GetLabelsForUser", false, new object[] { 0, userId, organizationId });
         }
 
         public BookVideoComments AddVideoComment(int bookId, string comment)
@@ -95,32 +87,12 @@ namespace DashboardWebApp.Service
             if (book == null)
                 return null;
 
-            var bookVideoComments = new BookVideoComments
-            {
-                BookId = bookId,
-                Comment = comment,
-                UserId = currentUser.UserId,
-                UserName = currentUser.UserName,
-                DisplayDate = $"{DateTime.UtcNow.ToString("dd MMM yyyy")} at {DateTime.UtcNow.ToString("hh:mm tt")}",
-                Created = DateTime.UtcNow,
-            };
+            var result = this.dataAccessLayer.ExecuteCommand("AddCommentToVideo", false, new object[] { 0, currentUser.UserId, bookId, comment });
 
-            context.BookVideoComments.Add(bookVideoComments);
-
-            context.BookVideoHistory.Add(new BookVideoHistory
-            {
-                BookId = bookId,
-                Created = DateTime.UtcNow,
-                UserId = currentUser.UserId,
-                History = $"{currentUser.UserName} added a new comment: {comment}"
-            });
-
-            context.SaveChanges();
-
-            return bookVideoComments;
+            return new BookVideoComments { BookId = bookId, Comment = comment, UserName = currentUser.Fullname, DisplayDate = $"{DateTime.UtcNow.ToString("dd/MM/yyyy")} {DateTime.UtcNow.ToString("hh:mm tt")}" };
         }
 
-        public BookVideoLabels AddVideoLabel(int bookId, string label)
+        public BookVideoLabels AddVideoLabel(int bookId, int labelId)
         {
             var currentUser = this.userService.GetCurrentUser();
 
@@ -132,64 +104,26 @@ namespace DashboardWebApp.Service
             if (book == null)
                 return null;
 
-            var bookVideoLabels = new BookVideoLabels
-            {
-                BookId = bookId,
-                Label = label,
-                UserId = currentUser.UserId,
-                Created = DateTime.UtcNow,
-                DisplayDate = $"{DateTime.UtcNow.ToString("dd MMM yyyy")} at {DateTime.UtcNow.ToString("hh:mm tt")}",
-            };
+            var result = this.dataAccessLayer.ExecuteCommand("AddLabelToVideo", false, new object[] { 0, currentUser.UserId, bookId, labelId });
 
-            context.BookVideoLabels.Add(bookVideoLabels);
-
-            context.BookVideoHistory.Add(new BookVideoHistory
-            {
-                BookId = bookId,
-                Created = DateTime.UtcNow,
-                UserId = currentUser.UserId,
-                History = $"{currentUser.UserName} added a new label {label}",
-                DisplayDate = $"{DateTime.UtcNow.ToString("dd MMM yyyy")} at {DateTime.UtcNow.ToString("hh:mm tt")}",
-            });
-
-            context.SaveChanges();
-
-            return bookVideoLabels;
+            return new BookVideoLabels { BookId = bookId, LabelId = labelId, DisplayDate = $"{DateTime.UtcNow.ToString("dd/MM/yyyy")} {DateTime.UtcNow.ToString("hh:mm tt")}" };
         }
 
-        public int GetTotalCommentsCount(int bookId)
+        public BookVideoHistory AddVideoHistory(int bookId, string history)
         {
-            if (bookId <= 0)
-                return 0;
+            var currentUser = this.userService.GetCurrentUser();
 
-            var bookVideoComments = context.BookVideoComments.Where(x => x.BookId == bookId).OrderByDescending(x => x.Created);
-            return bookVideoComments.Count();
-        }
-
-        public List<string> GetTagsSuggestion(int bookId)
-        {
-            var userOrganization = this.userService.GetCurrentUserOrganization();
-
-            var usersInThisOrganization = context.Users
-                .Where(x => x.OrganizationId == userOrganization.OrganizationId)
-                .Select(x => x.UserId)
-                .ToList();
-
-            var booksBelongToUsers = context.Books.Where(x => usersInThisOrganization.Contains(x.UserId)).ToList();
-
-            if (userService.IsUserSuperAdmin())
-            {
-                booksBelongToUsers = context.Books.ToList();
-            }
-
-            var bookIds = booksBelongToUsers.Select(x => x.Id).ToList();
-
-            var bookVideoLabels = context.BookVideoLabels.Where(x => bookIds.Contains(x.BookId)).OrderByDescending(x => x.Created).Take(10);
-
-            if (bookVideoLabels == null || bookVideoLabels.Count() == 0)
+            if (currentUser == null)
                 return null;
 
-            return bookVideoLabels.Select(x => x.Label).ToList();
+            var book = context.Books.SingleOrDefault(x => x.Id == bookId);
+
+            if (book == null)
+                return null;
+
+            var result = this.dataAccessLayer.ExecuteCommand("AddHistoryToVideo", false, new object[] { 0, currentUser.UserId, bookId, history });
+
+            return new BookVideoHistory { BookId = bookId, History = history };
         }
     }
 }

@@ -151,7 +151,13 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <input id="addLabelContent" class="form-control" maxlength="10">
+                <label for="labelsModalDropDown" class="form-label center-self">Label:</label>
+                <select id="labelsModalDropDown" class="dropdown-toggle" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    @foreach (var label in Model.BookVideoLabels)
+                    {
+                        <option value="@label.Value">@label.Text</option>
+                    }
+                </select>
             </div>
             <div class="modal-footer">
                 <button onclick="addLabel()" type="button" class="btn btn-success">Add</button>
@@ -166,8 +172,8 @@
     <script src="~/js/kendo/kendo.all.min.js"></script>
     <script id="action-template" type="text/x-kendo-template">
         <div style="display: flex; flex-direction: column">
-            <a href="/User/Videos/PlayVideo?bookId=#: id #" type="button" class="btn btn-primary">Play Video</a>
-            <a onclick="showAddLabelModal('#=id#')" style="margin-top: 10px;" type="button" class="btn btn-secondary">Add a label</a>
+            <a href="/User/Videos/PlayVideo?bookId=#: bookId #" type="button" class="btn btn-primary">Play Video</a>
+            <a onclick="showAddLabelModal('#=bookId#')" style="margin-top: 10px;" type="button" class="btn btn-secondary">Add a label</a>
             #if(note) {#<a onclick="showModal('#=note#')" style="margin-top: 10px;" type="button" class="btn btn-secondary">View note</a>#}#
         </div>
     </script>
@@ -285,13 +291,8 @@
         function addLabel() {
             var postModel = {
                 bookId: selectedBookId,
-                content: $('#addLabelContent').val()
+                labelId: $('#labelsModalDropDown').val()
             };
-
-            if (!postModel.content) {
-                $('#addLabelContent').css('border', '1px solid red');
-                return;
-            }
 
             $.ajax({
                 url: '/api/videos/addvideolabel',

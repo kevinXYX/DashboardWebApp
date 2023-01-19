@@ -1,17 +1,17 @@
 ﻿using DashboardWebApp.Data;
 using DashboardWebApp.Models;
+using System.Data;
 
 namespace DashboardWebApp.Service
 {
     public interface IVideoService
     {
-        BookDetailsViewModel GetBookDetails(int bookId);
-        List<VideoCommentsViewModel> GetVideoComments(int bookId);
-        List<VideoHistoryViewModel> GetVideoHistory(int bookId);
-        List<VideoLabelsViewModel> GetVideoLabels(int bookId);
+        Dictionary<string, DataTable> GetBookDetails(int bookId);
+        Dictionary<string, DataTable> GetFilterDropDowns(int userId, int organizationId);
+        DataSet GetUserLabelsDataSet(int bookId, int userId, int organizationId);
+        DataSet GetAllLabelsForOrganizationDataSet(int userId, int organizationId);
         BookVideoComments AddVideoComment(int bookId, string comment);
-        BookVideoLabels AddVideoLabel(int bookId, string label);
-        int GetTotalCommentsCount(int bookId);
-        List<string> GetTagsSuggestion(int bookId);
+        BookVideoLabels AddVideoLabel(int bookId, int labelId);
+        BookVideoHistory AddVideoHistory(int bookId, string history);
     }
 }

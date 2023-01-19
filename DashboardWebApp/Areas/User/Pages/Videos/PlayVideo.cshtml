@@ -260,8 +260,14 @@
                 <h5 class="modal-title">Add Label</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" id="addLabelModalBody">
-                <input id="addLabelContent" class="form-control" maxlength="10">
+            <div class="modal-body">
+                <label for="labelsModalDropDown" class="form-label center-self">Label:</label>
+                <select id="labelsModalDropDown" class="dropdown-toggle" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    @foreach (var label in Model.BookVideoLabels)
+                    {
+                        <option value="@label.Value">@label.Text</option>
+                    }
+                </select>
             </div>
             <div class="modal-footer">
                 <button onclick="addLabel()" type="button" class="btn btn-success">Add</button>
@@ -299,19 +305,14 @@
         };
 
         function addLabel() {
-            postModel.content = $('#addLabelContent').val();
-
-            if (!postModel.content) {
-                $('#addLabelContent').css('border', '1px solid red');
-                return;
-            }
-
             $.ajax({
                 url: '/api/videos/addvideolabel',
                 type: 'POST',
-                data: postModel,
+                data: { bookId: bookId, labelId: $('#labelsModalDropDown').val() },
                 success: function(data) {
                     if (data) {
+                        data.label = $('#labelsModalDropDown option:selected').text();
+
                         var labelsLength = $('.label').length;
 
                         $('.video-labels').prepend(`<span class="label">${data.label}</span>`);
@@ -347,10 +348,10 @@
                         var commentsLength = $('.comments').length;
 
                         $('.comments-container').prepend(`<div class="comments">
-                                                                                                                                                                        <span class="comments-date">${data.displayDate}</span>
-                                                                                                                                                                        <span class="comments-title">${data.userName} added a new comment</span>
-                                                                                                                                                                        <span class="comments-content">${data.comment}</span>
-                                                                                                                                                                        </div>`)
+                                <span class="comments-date">${data.displayDate}</span>
+                                <span class="comments-title">${data.userName} added a new comment</span>
+                                <span class="comments-content">${data.comment}</span>
+                        </div>`);
 
                         if (commentsLength > 6) {
                             $('.comments-container .comments').last().remove();
@@ -373,10 +374,10 @@
             var userName = '@Model.User.Identity.Name'
 
             $('.history-container').prepend(`<div class="history">
-                                                                                                                                                <span class="history-date">${date}</span>
-                                                                                                                                                <span class="history-title">${userName} ${history}</span>
-                                                                                                                                                <span class="history-content"></span>
-                                                                                                                                            </div>`);
+                <span class="history-date">${date}</span>
+                <span class="history-title">${userName} ${history}</span>
+                <span class="history-content"></span>
+            </div>`);
 
             if ($('.history').length > 6) {
                 $('.history-container .history').last().remove();

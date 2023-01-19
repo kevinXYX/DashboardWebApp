@@ -7,18 +7,20 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace DashboardWebApp.ApiControllers
 {
     [Authorize]
     public class BooksController : ControllerBase
     {
-        private readonly IDbFactory dbFactory;
         private readonly IUserService userService;
-        public BooksController(IDbFactory dbFactory, IUserService userService)
+        private readonly IDataAccessLayer dataAccessLayer;
+
+        public BooksController(IUserService userService, IDataAccessLayer dataAccessLayer)
         {
-            this.dbFactory = dbFactory;
             this.userService = userService;
+            this.dataAccessLayer = dataAccessLayer;
         }
 
         [HttpPost]
@@ -34,124 +36,65 @@ namespace DashboardWebApp.ApiControllers
                 videoFilterViewModel = Newtonsoft.Json.JsonConvert.DeserializeObject<VideoFilterViewModel>(videoFilterViewModelSessionString);
             }
 
-            var context = dbFactory.GetDatabaseContext();
-            var organization = this.userService.GetCurrentUserOrganization();
-            var usersWithinOrganization = context.Users.Where(x => x.OrganizationId == organization.OrganizationId);
-            var userIds = usersWithinOrganization.Select(x => x.UserId).ToList();
+            var currentUser = this.userService.GetCurrentUser();    
 
-            if (userService.IsUserSuperAdmin())
-            {
-                userIds = context.Users.Select(x => x.UserId).ToList();
-            }
+            var searchVideosDataSet = this.dataAccessLayer.GetDataSet("SearchVideos", false, new object[]
+            {   0,
+                currentUser.UserId,
+                currentUser.OrganizationId,
+                videoFilterViewModel.ISBN,
+                DateTime.Parse(videoFilterViewModel.DateTakenFrom.GetValueOrDefault().ToString(format)),
+                DateTime.Parse(videoFilterViewModel.DateTakenTo.GetValueOrDefault().ToString(format)),
+                DateTime.Parse(videoFilterViewModel.DateUploadedFrom.GetValueOrDefault().ToString(format)),
+                DateTime.Parse(videoFilterViewModel.DateUploadedTo.GetValueOrDefault().ToString(format)),
+                videoFilterViewModel.VideoDurationFrom > 0 ? videoFilterViewModel.VideoDurationFrom : null,
+                videoFilterViewModel.VideoDurationTo > 0 ? videoFilterViewModel.VideoDurationTo : null,
+                videoFilterViewModel.FileSizeFrom > 0 ? videoFilterViewModel.FileSizeFrom : null,
+                videoFilterViewModel.FileSizeTo > 0 ? videoFilterViewModel.FileSizeTo : null,
+                videoFilterViewModel.UserNote,
+                null,
+                videoFilterViewModel.SelectedBookVideoLabels != null && videoFilterViewModel.SelectedBookVideoLabels.Count() > 0 ? string.Join(",", videoFilterViewModel.SelectedBookVideoLabels) : null,
+                videoFilterViewModel.SelectedBookTypes != null && videoFilterViewModel.SelectedBookTypes.Count() > 0 ? string.Join(",", videoFilterViewModel.SelectedBookTypes) : null,
+                videoFilterViewModel.SelectedHasComments != null && videoFilterViewModel.SelectedHasComments.Count() > 0 && videoFilterViewModel.SelectedHasComments.Any(x => int.Parse(x) == 1) ? true : false,
+                2
+            });
 
-            var bookVideoLabels = context.BookVideoLabels.Where(x => userIds.Contains(x.UserId)).ToList();
-            var bookTypes = context.BookTypes.ToList();
-            var bookVideos = context.BookVideos.ToList();
-            var bookVideoComments = context.BookVideoComments.Where(x => userIds.Contains(x.UserId)).ToList();
-
-            var sqlParams = new SqlParameter[] {
-              new SqlParameter() { ParameterName = "@ISBN", SqlDbType = System.Data.SqlDbType.VarChar, Value = videoFilterViewModel.ISBN ?? Convert.DBNull },
-              new SqlParameter() { ParameterName = "@DateTakenFrom", SqlDbType = System.Data.SqlDbType.VarChar, Value = videoFilterViewModel.DateTakenFrom.GetValueOrDefault().ToString("yyyy-MM-dd") ?? Convert.DBNull },
-              new SqlParameter() { ParameterName = "@DateTakenTo", SqlDbType = System.Data.SqlDbType.VarChar, Value = videoFilterViewModel.DateTakenTo.GetValueOrDefault().ToString("yyyy-MM-dd") ?? Convert.DBNull },
-              new SqlParameter() { ParameterName = "@DateUploadedFrom", SqlDbType = System.Data.SqlDbType.VarChar, Value = videoFilterViewModel.DateUploadedFrom.GetValueOrDefault().ToString("yyyy-MM-dd") ?? Convert.DBNull },
-              new SqlParameter() { ParameterName = "@DateUploadedTo", SqlDbType = System.Data.SqlDbType.VarChar, Value = videoFilterViewModel.DateUploadedTo.GetValueOrDefault().ToString("yyyy-MM-dd") ?? Convert.DBNull },
-              new SqlParameter() { ParameterName = "@UserNote", SqlDbType = System.Data.SqlDbType.VarChar, Value = videoFilterViewModel.UserNote ?? Convert.DBNull },
-              new SqlParameter() { ParameterName = "@VideoDurationFrom", SqlDbType = System.Data.SqlDbType.Int, Value = videoFilterViewModel.VideoDurationFrom ?? Convert.DBNull },
-              new SqlParameter() { ParameterName = "@VideoDurationTo", SqlDbType = System.Data.SqlDbType.Int, Value = videoFilterViewModel.VideoDurationTo ?? Convert.DBNull },
-              new SqlParameter() { ParameterName = "@FileSizeFrom", SqlDbType = System.Data.SqlDbType.Int, Value = videoFilterViewModel.FileSizeFrom ?? Convert.DBNull },
-              new SqlParameter() { ParameterName = "@FileSizeTo", SqlDbType = System.Data.SqlDbType.Int, Value = videoFilterViewModel.FileSizeTo ?? Convert.DBNull },
-            };
-
-            var books = context.Books.FromSqlRaw<Books>("EXEC [dbo].[GetBooks] @ISBN, @DateTakenFrom, @DateTakenTo, @DateUploadedFrom, " +
-                "@DateUploadedTo, @UserNote, @VideoDurationFrom, " +
-                "@VideoDurationTo, @FileSizeFrom, @FileSizeTo", sqlParams).ToList();
-
-            books = books.Where(x => userIds.Contains(x.UserId)).ToList();
-
-            if (videoFilterViewModel.SelectedTakenByUsers != null && videoFilterViewModel.SelectedTakenByUsers.Length > 0)
-            {
-                var selectedTakenByUsers = new List<int>();
-
-                videoFilterViewModel.SelectedTakenByUsers.ToList().ForEach(x => selectedTakenByUsers.Add(int.Parse(x)));
-
-                books = books.Where(x => selectedTakenByUsers.Contains(x.UserId)).ToList();
-            }
-
-            if (videoFilterViewModel.SelectedBookTypes != null && videoFilterViewModel.SelectedBookTypes.Length > 0)
-            {
-                var selectedBookTypes = new List<int>();
-
-                videoFilterViewModel.SelectedBookTypes.ToList().ForEach(x => selectedBookTypes.Add(int.Parse(x)));
-
-                books = books.Where(x => selectedBookTypes.Contains(x.TypeId.GetValueOrDefault())).ToList();
-            }
-
-            if (videoFilterViewModel.SelectedBookVideoLabels != null && videoFilterViewModel.SelectedBookVideoLabels.Length > 0)
-            {
-                var selectedBookVideoLabels = new List<int>();
-
-                videoFilterViewModel.SelectedBookVideoLabels.ToList().ForEach(x => selectedBookVideoLabels.Add(int.Parse(x)));
-
-                var filteredBookVideoLabelBookIds = bookVideoLabels.Where(x => selectedBookVideoLabels.Contains(x.Id)).Select(x => x.BookId);
-
-                books = books.Where(x => filteredBookVideoLabelBookIds.Contains(x.Id)).ToList();
-            }
-
-            if (videoFilterViewModel.SelectedHasComments != null && videoFilterViewModel.SelectedHasComments.Length > 0)
-            {
-                var selectedHasComments = new List<int>();
-
-                videoFilterViewModel.SelectedHasComments.ToList().ForEach(x => selectedHasComments.Add(int.Parse(x)));
-                var bookVideoCommentsBookIds = bookVideoComments.Select(x => x.BookId).ToList();
-
-                if (selectedHasComments.Count() == 1 && selectedHasComments.Any(x => x == 0))
-                {
-                    books = books.Where(x => !bookVideoCommentsBookIds.Contains(x.Id)).ToList();
-                }
-                else if (selectedHasComments.Count() == 1 && selectedHasComments.Any(x => x == 1))
-                {
-                    books = books.Where(x => bookVideoCommentsBookIds.Contains(x.Id)).ToList();
-                }
-                else
-                {
-                    if (selectedHasComments.Count() == 2)
-                    {
-                        books = books.Where(x => bookVideoCommentsBookIds.Contains(x.Id) || !bookVideoCommentsBookIds.Contains(x.Id)).ToList();
-                    }
-                }
-            }
-
-            if (videoFilterViewModel.ShowWithUserNotesOnly.HasValue && videoFilterViewModel.ShowWithUserNotesOnly.Value)
-            {
-                books = books.Where(x => !string.IsNullOrEmpty(x.Note)).ToList();
-            }
+            var booksTable = searchVideosDataSet.Tables[0];
+            var bookLabelsTable = searchVideosDataSet.Tables[1];
+            var searchResultCount = searchVideosDataSet.Tables[2];
 
             var booksViewModel = new List<BooksViewModel>();
+            var booksLabelViewModel = new List<BooksLabelViewModel>();
 
-            books = books.GroupBy(x => x.Id).Select(x => x.FirstOrDefault()).ToList();
-
-            books.ForEach(x =>
+            foreach (DataRow dataRow in bookLabelsTable.Rows)
             {
-                var user = usersWithinOrganization?.SingleOrDefault(b => b.UserId == x.UserId)?.Fullname ?? usersWithinOrganization?.SingleOrDefault(b => b.UserId == x.UserId)?.UserName;
-                var bookType = bookTypes.SingleOrDefault(b => b.Id == x.TypeId.GetValueOrDefault())?.Name;
-                var bookVideo = bookVideos.SingleOrDefault(b => b.FileName == x.FileName && b.UserId == x.UserId);
+                booksLabelViewModel.Add(new BooksLabelViewModel
+                {
+                    BookId = (int)dataRow["BookId"],
+                    BookVideoLabelId = (int)dataRow["BookVideoLabelID"],
+                    LabelName = dataRow["LabelName"].ToString()
+                });
+            }
+
+            foreach (DataRow dataRow in booksTable.Rows)
+            {
                 booksViewModel.Add(new BooksViewModel
                 {
-                    Id = x.Id,
-                    BookId = x.BookId,
-                    Isbn = x.Isbn,
-                    VideoUrl = bookVideo?.VideoUri ?? string.Empty,
-                    Labels = string.Join(",", bookVideoLabels.Where(b => b.BookId == x.Id).Select(x => x.Label)),
-                    User = user,
-                    BookType = bookType,
-                    Note = x.Note,
-                    VideoDuration = x.VideoDuration,
-                    FileSize = x.FileSize,
-                    DateTaken = x.Created.ToString("dd MMM yyyy hh:mm tt"),
-                    DateUploaded = x.UploadDate.GetValueOrDefault().ToString("dd MMM yyyy hh:mm tt"),
-                    Comment = bookVideoComments.Any(b => b.BookId == x.Id) ? "Yes" : "No"
+                    BookId = (int)dataRow["BookId"],
+                    Isbn = dataRow["ISBN"].ToString(),
+                    Labels = booksLabelViewModel.Count() > 0 ? string.Join(",", booksLabelViewModel.Where(x => x.BookId == (int)dataRow["BookId"]).GroupBy(x => x.LabelName).Select(x => x.Select(x => x.LabelName).FirstOrDefault()).ToList()) : string.Empty,
+                    DateTaken = dataRow["DateTaken"].ToString(),
+                    TimeTaken = dataRow["TimeTaken"].ToString(),
+                    DateUploaded = dataRow["DateUploaded"].ToString(),
+                    TimeUploaded = dataRow["TimeUploaded"].ToString(),
+                    VideoDuration = (int)dataRow["VideoDuration"],
+                    FileSize = (int)dataRow["FileSize"],
+                    Note = dataRow["UserNote"].ToString(),
+                    User = dataRow["UserName"].ToString(),
+                    BookType = dataRow["BookTypeName"].ToString(),
+                    Comment = bool.Parse(dataRow["HasComments"].ToString()) ? "Yes" : "No"
                 });
-            });
+            }
 
             return booksViewModel.AsQueryable().ToDataSourceResult(requestModel);
         }
@@ -180,7 +123,16 @@ namespace DashboardWebApp.ApiControllers
         public string User { get; set; }
         public string BookType { get; set; }
         public string DateTaken { get; set; }
+        public string TimeTaken { get; set; }
         public string DateUploaded { get; set; }
+        public string TimeUploaded { get; set; }
         public string Comment { get; set; }
+    }
+
+    public class BooksLabelViewModel
+    {
+        public int BookId { get; set; }
+        public int BookVideoLabelId { get; set; }
+        public string LabelName { get; set; }
     }
 }
