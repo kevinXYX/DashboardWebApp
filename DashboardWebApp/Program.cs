@@ -1,3 +1,4 @@
+using DashboardWebApp;
 using DashboardWebApp.Data;
 using DashboardWebApp.Service;
 using Microsoft.AspNetCore.Identity;
@@ -24,7 +25,7 @@ builder.Services.AddTransient<ClaimsPrincipal>(s =>
 builder.Services.AddScoped<IDbFactory, DbFactory>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IVideoService, VideoService>();
-builder.Services.AddScoped<IDataAccessLayer, DataAccessLayer>();
+builder.Services.AddScoped<ADODataLayer>();
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 builder.Services.AddSession(options =>
 {

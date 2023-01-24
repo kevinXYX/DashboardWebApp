@@ -3,11 +3,9 @@ using DashboardWebApp.Models;
 using DashboardWebApp.Service;
 using KendoNET.DynamicLinq;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
 using System.Data;
+using System.Data.SqlClient;
 
 namespace DashboardWebApp.ApiControllers
 {
@@ -15,12 +13,12 @@ namespace DashboardWebApp.ApiControllers
     public class BooksController : ControllerBase
     {
         private readonly IUserService userService;
-        private readonly IDataAccessLayer dataAccessLayer;
+        private readonly ADODataLayer adoDataLayer;
 
-        public BooksController(IUserService userService, IDataAccessLayer dataAccessLayer)
+        public BooksController(IUserService userService, ADODataLayer adoDataLayer)
         {
             this.userService = userService;
-            this.dataAccessLayer = dataAccessLayer;
+            this.adoDataLayer = adoDataLayer;
         }
 
         [HttpPost]
@@ -36,28 +34,28 @@ namespace DashboardWebApp.ApiControllers
                 videoFilterViewModel = Newtonsoft.Json.JsonConvert.DeserializeObject<VideoFilterViewModel>(videoFilterViewModelSessionString);
             }
 
-            var currentUser = this.userService.GetCurrentUser();    
+            var currentUser = this.userService.GetCurrentUser();
 
-            var searchVideosDataSet = this.dataAccessLayer.GetDataSet("SearchVideos", false, new object[]
-            {   0,
-                currentUser.UserId,
-                currentUser.OrganizationId,
-                videoFilterViewModel.ISBN,
-                DateTime.Parse(videoFilterViewModel.DateTakenFrom.GetValueOrDefault().ToString(format)),
-                DateTime.Parse(videoFilterViewModel.DateTakenTo.GetValueOrDefault().ToString(format)),
-                DateTime.Parse(videoFilterViewModel.DateUploadedFrom.GetValueOrDefault().ToString(format)),
-                DateTime.Parse(videoFilterViewModel.DateUploadedTo.GetValueOrDefault().ToString(format)),
-                videoFilterViewModel.VideoDurationFrom > 0 ? videoFilterViewModel.VideoDurationFrom : null,
-                videoFilterViewModel.VideoDurationTo > 0 ? videoFilterViewModel.VideoDurationTo : null,
-                videoFilterViewModel.FileSizeFrom > 0 ? videoFilterViewModel.FileSizeFrom : null,
-                videoFilterViewModel.FileSizeTo > 0 ? videoFilterViewModel.FileSizeTo : null,
-                videoFilterViewModel.UserNote,
-                null,
-                videoFilterViewModel.SelectedBookVideoLabels != null && videoFilterViewModel.SelectedBookVideoLabels.Count() > 0 ? string.Join(",", videoFilterViewModel.SelectedBookVideoLabels) : null,
-                videoFilterViewModel.SelectedBookTypes != null && videoFilterViewModel.SelectedBookTypes.Count() > 0 ? string.Join(",", videoFilterViewModel.SelectedBookTypes) : null,
-                videoFilterViewModel.SelectedHasComments != null && videoFilterViewModel.SelectedHasComments.Count() > 0 && videoFilterViewModel.SelectedHasComments.Any(x => int.Parse(x) == 1) ? true : false,
-                2
-            });
+            var sqlParams = new SqlParameter[] {
+              new SqlParameter() { ParameterName = "@ISBN", SqlDbType = System.Data.SqlDbType.VarChar, Value = videoFilterViewModel.ISBN ?? Convert.DBNull },
+              new SqlParameter() { ParameterName = "@DateCreatedFrom", SqlDbType = System.Data.SqlDbType.DateTime, Value = DateTime.Parse(videoFilterViewModel.DateTakenFrom.GetValueOrDefault().ToString(format)) },
+              new SqlParameter() { ParameterName = "@DateCreatedTo", SqlDbType = System.Data.SqlDbType.DateTime, Value = DateTime.Parse(videoFilterViewModel.DateTakenTo.GetValueOrDefault().ToString(format)) },
+              new SqlParameter() { ParameterName = "@DateUploadedFrom", SqlDbType = System.Data.SqlDbType.DateTime, Value = DateTime.Parse(videoFilterViewModel.DateUploadedFrom.GetValueOrDefault().ToString(format)) },
+              new SqlParameter() { ParameterName = "@DateUploadedTo", SqlDbType = System.Data.SqlDbType.DateTime, Value = DateTime.Parse(videoFilterViewModel.DateUploadedTo.GetValueOrDefault().ToString(format)) },
+              new SqlParameter() { ParameterName = "@UserNote", SqlDbType = System.Data.SqlDbType.VarChar, Value = videoFilterViewModel.UserNote ?? Convert.DBNull },
+              new SqlParameter() { ParameterName = "@VideoDurationFrom", SqlDbType = System.Data.SqlDbType.Int, Value = videoFilterViewModel.VideoDurationFrom > 0 ? videoFilterViewModel.VideoDurationFrom : null },
+              new SqlParameter() { ParameterName = "@VideoDurationTo", SqlDbType = System.Data.SqlDbType.Int, Value = videoFilterViewModel.VideoDurationTo > 0 ? videoFilterViewModel.VideoDurationTo : null },
+              new SqlParameter() { ParameterName = "@FileSizeFrom", SqlDbType = System.Data.SqlDbType.Int, Value = videoFilterViewModel.FileSizeFrom > 0 ? videoFilterViewModel.FileSizeFrom : null },
+              new SqlParameter() { ParameterName = "@FileSizeTo", SqlDbType = System.Data.SqlDbType.Int, Value = videoFilterViewModel.FileSizeTo > 0 ? videoFilterViewModel.FileSizeTo : null },
+              new SqlParameter() { ParameterName = "@LabelsID", SqlDbType = System.Data.SqlDbType.VarChar, Value = videoFilterViewModel.SelectedBookVideoLabels != null && videoFilterViewModel.SelectedBookVideoLabels.Count() > 0 ? string.Join(",", videoFilterViewModel.SelectedBookVideoLabels) : null },
+              new SqlParameter() { ParameterName = "@BookTypesID", SqlDbType = System.Data.SqlDbType.VarChar, Value = videoFilterViewModel.SelectedBookTypes != null && videoFilterViewModel.SelectedBookTypes.Count() > 0 ? string.Join(",", videoFilterViewModel.SelectedBookTypes) : null },
+              new SqlParameter() { ParameterName = "@HasComments", SqlDbType = System.Data.SqlDbType.Bit, Value = videoFilterViewModel.SelectedHasComments != null && videoFilterViewModel.SelectedHasComments.Count() > 0 && videoFilterViewModel.SelectedHasComments.Any(x => int.Parse(x) == 1) ? true : false },
+              new SqlParameter() { ParameterName = "@SortBy", SqlDbType = System.Data.SqlDbType.Int, Value = 2 },
+              new SqlParameter() { ParameterName = "@UserID", SqlDbType = System.Data.SqlDbType.Int, Value = currentUser.UserId },
+              new SqlParameter() { ParameterName = "@OrganizationID", SqlDbType = System.Data.SqlDbType.Int, Value = currentUser.OrganizationId },
+            };
+
+            var searchVideosDataSet = this.adoDataLayer.GetDataSet("SearchVideos", sqlParams);
 
             var booksTable = searchVideosDataSet.Tables[0];
             var bookLabelsTable = searchVideosDataSet.Tables[1];

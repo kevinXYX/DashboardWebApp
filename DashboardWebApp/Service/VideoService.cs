@@ -2,6 +2,7 @@
 using DashboardWebApp.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
+using System.Data.SqlClient;
 
 namespace DashboardWebApp.Service
 {
@@ -9,19 +10,22 @@ namespace DashboardWebApp.Service
     {
         private readonly ApplicationDbContext context;
         private readonly IUserService userService;
-        private readonly IDataAccessLayer dataAccessLayer;
-        public VideoService(IDbFactory dbFactory, IUserService userService, IDataAccessLayer dataAccessLayer)
+        private readonly ADODataLayer adoDataLayer;
+        public VideoService(IDbFactory dbFactory, IUserService userService, ADODataLayer aDODataLayer)
         {
             context = dbFactory.GetDatabaseContext();
             this.userService = userService;
-            this.dataAccessLayer = dataAccessLayer;
+            this.adoDataLayer = aDODataLayer;
         }
 
         public Dictionary<string, DataTable> GetBookDetails(int bookId)
         {
             var dataSetDict = new Dictionary<string, DataTable>();
 
-            var videoDetailsDataSet = this.dataAccessLayer.GetDataSet("GetVideoToPlay", false, new object[] { 0, bookId });
+            var videoDetailsDataSet = this.adoDataLayer.GetDataSet("GetVideoToPlay", new System.Data.SqlClient.SqlParameter[]
+            {
+                 new SqlParameter() { ParameterName = "@BookID", SqlDbType = System.Data.SqlDbType.Int, Value = bookId },
+            });
 
             if (videoDetailsDataSet != null)
             {
@@ -48,7 +52,11 @@ namespace DashboardWebApp.Service
         {
             var dataSetDict = new Dictionary<string, DataTable>();
 
-            var filterDropDownsDataSet = this.dataAccessLayer.GetDataSet("GetFiltersDropdowns", false, new object[] { 0, userId, organizationId });
+            var filterDropDownsDataSet = this.adoDataLayer.GetDataSet("GetFiltersDropdowns", new System.Data.SqlClient.SqlParameter[]
+            {
+                new SqlParameter() { ParameterName = "@UserID", SqlDbType = System.Data.SqlDbType.Int, Value = userId },
+                new SqlParameter() { ParameterName = "@OrganizationID", SqlDbType = System.Data.SqlDbType.Int, Value = organizationId },
+            });
 
             if (filterDropDownsDataSet != null)
             {
@@ -67,12 +75,21 @@ namespace DashboardWebApp.Service
 
         public DataSet GetUserLabelsDataSet(int bookId, int userId, int organizationId)
         {
-            return this.dataAccessLayer.GetDataSet("GetLabelsForUser", false, new object[] { 0, userId, organizationId, bookId });
+            return this.adoDataLayer.GetDataSet("GetLabelsForUser", new System.Data.SqlClient.SqlParameter[]
+            {
+                new SqlParameter() { ParameterName = "@BookID", SqlDbType = System.Data.SqlDbType.Int, Value = bookId },
+                new SqlParameter() { ParameterName = "@UserID", SqlDbType = System.Data.SqlDbType.Int, Value = userId },
+                new SqlParameter() { ParameterName = "@OrganizationID", SqlDbType = System.Data.SqlDbType.Int, Value = organizationId },
+            });
         }
 
         public DataSet GetAllLabelsForOrganizationDataSet(int userId, int organizationId)
         {
-            return this.dataAccessLayer.GetDataSet("GetLabelsForUser", false, new object[] { 0, userId, organizationId });
+            return this.adoDataLayer.GetDataSet("GetLabelsForUser", new System.Data.SqlClient.SqlParameter[]
+            {
+                new SqlParameter() { ParameterName = "@UserID", SqlDbType = System.Data.SqlDbType.Int, Value = userId },
+                new SqlParameter() { ParameterName = "@OrganizationID", SqlDbType = System.Data.SqlDbType.Int, Value = organizationId },
+            });
         }
 
         public BookVideoComments AddVideoComment(int bookId, string comment)
@@ -87,7 +104,12 @@ namespace DashboardWebApp.Service
             if (book == null)
                 return null;
 
-            var result = this.dataAccessLayer.ExecuteCommand("AddCommentToVideo", false, new object[] { 0, currentUser.UserId, bookId, comment });
+            var result = this.adoDataLayer.ExecuteSP("AddCommentToVideo", new System.Data.SqlClient.SqlParameter[]
+            {
+                new SqlParameter() { ParameterName = "@BookID", SqlDbType = System.Data.SqlDbType.Int, Value = bookId },
+                new SqlParameter() { ParameterName = "@UserID", SqlDbType = System.Data.SqlDbType.Int, Value = currentUser.UserId },
+                new SqlParameter() { ParameterName = "@Comment", SqlDbType = System.Data.SqlDbType.NVarChar, Value = comment },
+            });
 
             return new BookVideoComments { BookId = bookId, Comment = comment, UserName = currentUser.Fullname, DisplayDate = $"{DateTime.UtcNow.ToString("dd/MM/yyyy")} {DateTime.UtcNow.ToString("hh:mm tt")}" };
         }
@@ -104,7 +126,12 @@ namespace DashboardWebApp.Service
             if (book == null)
                 return null;
 
-            var result = this.dataAccessLayer.ExecuteCommand("AddLabelToVideo", false, new object[] { 0, currentUser.UserId, bookId, labelId });
+            var result = this.adoDataLayer.ExecuteSP("AddLabelToVideo", new System.Data.SqlClient.SqlParameter[]
+            {
+                new SqlParameter() { ParameterName = "@BookID", SqlDbType = System.Data.SqlDbType.Int, Value = bookId },
+                new SqlParameter() { ParameterName = "@UserID", SqlDbType = System.Data.SqlDbType.Int, Value = currentUser.UserId },
+                new SqlParameter() { ParameterName = "@LabelID", SqlDbType = System.Data.SqlDbType.Int, Value = labelId },
+            });
 
             return new BookVideoLabels { BookId = bookId, LabelId = labelId, DisplayDate = $"{DateTime.UtcNow.ToString("dd/MM/yyyy")} {DateTime.UtcNow.ToString("hh:mm tt")}" };
         }
@@ -121,7 +148,12 @@ namespace DashboardWebApp.Service
             if (book == null)
                 return null;
 
-            var result = this.dataAccessLayer.ExecuteCommand("AddHistoryToVideo", false, new object[] { 0, currentUser.UserId, bookId, history });
+            var result = this.adoDataLayer.ExecuteSP("AddHistoryToVideo", new System.Data.SqlClient.SqlParameter[]
+            {
+                new SqlParameter() { ParameterName = "@BookID", SqlDbType = System.Data.SqlDbType.Int, Value = bookId },
+                new SqlParameter() { ParameterName = "@UserID", SqlDbType = System.Data.SqlDbType.Int, Value = currentUser.UserId },
+                new SqlParameter() { ParameterName = "@HistoryDescription", SqlDbType = System.Data.SqlDbType.NVarChar, Value = history },
+            });
 
             return new BookVideoHistory { BookId = bookId, History = history };
         }
